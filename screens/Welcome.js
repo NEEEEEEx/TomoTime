@@ -24,7 +24,15 @@ export default function Welcome ()  {
       await GoogleSignin.hasPlayServices(); 
       // Start the sign-in process
       const userDetails = await GoogleSignin.signIn(); 
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        Alert.alert('Sign-In Cancelled', 'User cancelled the sign-in flow');
+        return;
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        Alert.alert('Sign-In In Progress', 'Sign in is already in progress');
+        return;
+      }
       setUserInfo(userDetails);
+      
       Alert.alert('Successfully signed in:', JSON.stringify(userDetails));
       // You can now send userDetails.idToken to your backend for verification
 
