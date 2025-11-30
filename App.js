@@ -27,7 +27,7 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Semester"
+        initialRouteName="Welcome"
         screenOptions={{
           headerTransparent: true,
           headerShadowVisible: false,
