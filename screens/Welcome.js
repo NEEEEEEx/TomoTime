@@ -29,12 +29,14 @@ export default function Welcome ()  {
       const userDetails = await GoogleSignin.signIn(); 
       setUserInfo(userDetails);
 
-      if (userDetails.type == 'cancelled') {
+      if (userDetails.type == 'success') {
+        Alert.alert('Successfully signed in:', JSON.stringify(userDetails.data.user.name));
+        navigation.navigate('Semester');
         return;
       }
+      Alert.alert('Sign in type:', JSON.stringify(userDetails.type));
+
       
-      Alert.alert('Successfully signed in:', JSON.stringify(userDetails.data.user.name));
-      navigation.navigate('Semester');
       // You can now send userDetails.idToken to your backend for verification
 
     } catch (error) {
