@@ -14,18 +14,29 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import styles from '../styles/appStyles';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import {useNavigation} from '@react-navigation/native';
 
 export default function Welcome ()  {
   const [userInfo, setUserInfo] = useState(null);
+  const navigation = useNavigation();
 
   const signIn = async () => {
+    
     try {
       // Check if device supports Google Play Services
       await GoogleSignin.hasPlayServices(); 
       // Start the sign-in process
       const userDetails = await GoogleSignin.signIn(); 
       setUserInfo(userDetails);
-      Alert.alert('Successfully signed in:', JSON.stringify(userDetails));
+
+      if (userDetails.type == 'success') {
+        Alert.alert('Successfully signed in:', JSON.stringify(userDetails.data.user.name));
+        navigation.navigate('Semester');
+        return;
+      }
+      Alert.alert('Sign in type:', JSON.stringify(userDetails.type));
+
+      
       // You can now send userDetails.idToken to your backend for verification
 
     } catch (error) {
