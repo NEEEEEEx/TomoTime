@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,49 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import styles from '../styles/appStyles';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 export default function Welcome ()  {
+  const [userInfo, setUserInfo] = useState(null);
+
+  const signIn = async () => {
+    try {
+      // Check if device supports Google Play Services
+      await GoogleSignin.hasPlayServices(); 
+      // Start the sign-in process
+      const userDetails = await GoogleSignin.signIn(); 
+      setUserInfo(userDetails);
+      Alert.alert('Successfully signed in:', JSON.stringify(userDetails));
+      // You can now send userDetails.idToken to your backend for verification
+
+    } catch (error) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        Alert.alert('Sign-In Cancelled', 'User cancelled the sign-in flow');
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        Alert.alert('Sign-In In Progress', 'Sign in is already in progress');
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Play Services Error', 'Google Play Services not available or outdated');
+      } else {
+        console.error('Other error occurred:', error.message);
+      }
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await GoogleSignin.signOut();
+      setUserInfo(null); // Set user state to null
+      console.log('User signed out');
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <ImageBackground 
       source={require('../assests/images/gradient-bg.png')}
@@ -56,7 +92,7 @@ export default function Welcome ()  {
           </Text>
 
           {/* ----- Google Sign In Button (gradient) -----*/}
-          <TouchableOpacity style={styles.button} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.button} activeOpacity={0.85} onPress={signIn}>
             <LinearGradient
               colors={['#FF3F41', '#FFBE5B']}
               start={{ x: 0, y: 0 }}
