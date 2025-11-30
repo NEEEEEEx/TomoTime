@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Welcome from './screens/Welcome';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import Welcome from './screens/Welcome';
+import Semester from './screens/Semester';
 
 // Assuming you are using a library like react-native-dotenv for environment variables
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID } from '@env';
@@ -26,7 +27,7 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Welcome"
+        initialRouteName="Semester"
         screenOptions={{
           headerTransparent: true,
           headerShadowVisible: false,
@@ -40,6 +41,13 @@ const App = () => {
         <Stack.Screen 
           name="Welcome" 
           component={Welcome} 
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="Semester" 
+          component={Semester} 
           options={{
             headerShown: false,
           }}

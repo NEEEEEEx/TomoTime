@@ -64,7 +64,7 @@ export default function Welcome ()  {
           <View style={styles.logoContainer}>
             <Image
               source={require('../assests/images/tomo-logo.png')}
-              style={styles.logo}
+              style={styles.appLogo}
               resizeMode="contain"
             />
           </View>
