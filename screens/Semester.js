@@ -28,7 +28,7 @@ const steps = [
 
 //========= STEP INDICATOR STYLES ==========//
 const stepsIndicatorStyles = {
-  //------ Unfinished Styles ------//
+  ///------ Unfinished Styles ------//
   stepStrokeUnFinishedColor: '#aaaaaa',
   separatorUnFinishedColor: '#aaaaaa',
   stepIndicatorUnFinishedColor: '#aaaaaa',
@@ -36,23 +36,22 @@ const stepsIndicatorStyles = {
   stepIndicatorLabelUnFinishedColor: '#ffffffff',
   
   //------ Current styles ------//
+  stepStrokeCurrentColor: '#ff9900ff',
+  stepIndicatorCurrentColor: '#ff9900ff',
   currentStepIndicatorLabelFontSize: 17,
   currentStepLabelColor: '#ff9900ff',
   stepIndicatorLabelCurrentColor: '#ffffffff',
-  stepIndicatorCurrentColor: '#ff9900ff',
-  stepStrokeCurrentColor: '#ff9900ff',
   currentStepStrokeWidth: 3,
   currentStepIndicatorSize: 40,
-  labelColor: '#aaaaaa',
   
   //------ Finished Styles ------//
-  stepIndicatorLabelFinishedColor: '#ffffffff',
   stepStrokeFinishedColor: '#BE1C1C',
   separatorFinishedColor: '#BE1C1C',
   stepIndicatorFinishedColor: '#BE1C1C',
-
-
+  stepIndicatorLabelFinishedColor: '#ffffffff',
+  
   // ----- General Styles ----- //
+  labelColor: '#BE1C1C',
   labelSize: 13,
   stepIndicatorSize: 25,
   separatorStrokeWidth: 3,
@@ -70,6 +69,17 @@ const sampleSemesters = [
 export default function Semester() {
   const [currentPosition, setCurrentPosition] = useState(0);
   const [semesters, setSemesters] = useState(sampleSemesters);
+
+  const goNext = () => {
+    if (currentPosition < 2) {
+      setCurrentPosition(currentPosition + 1);
+    }
+  };
+  const goBack = () => {
+    if (currentPosition > 0) {
+      setCurrentPosition(currentPosition - 1);
+    }
+  };
 
   // make a semester selectable: mark only the tapped semester as selected
   const selectSemester = (id) => {
@@ -160,8 +170,8 @@ export default function Semester() {
         <TouchableOpacity>
           <LinearGradient
             colors={['#FF5F6D', '#FFC371']} // Your gradient colors
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+            start={{ x: 0, y: 1 }}
+            end={{ x: 1, y: 0 }}
             style={styles.gradientContainer}
           >
               <Image source={require('../assests/images/default-profile.jpg')} style={styles.profileCircle} />
@@ -184,12 +194,18 @@ export default function Semester() {
         
         {/* -------- Steps Buttons -------- */}
         <View style={styles.stepButtonsRow}>
+          {currentPosition !== 0 && (
+            <TouchableOpacity style={styles.backButton} onPress={goBack}>
+              <Text style={styles.nextText}>Back</Text>
+              <FontAwesome name="angle-double-left" size={18} color="#fff" />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.addButton}>
             <FontAwesome name="plus" size={18} color="#fff" />
             <Text style={styles.addText}> Add</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.nextButton}>
+          <TouchableOpacity style={styles.nextButton} onPress={goNext}>
             <Text style={styles.nextText}>Next </Text>
             <FontAwesome name="angle-double-right" size={18} color="#fff" />
           </TouchableOpacity>

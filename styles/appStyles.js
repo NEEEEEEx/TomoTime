@@ -224,6 +224,16 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end'
   },
 
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#BE1C1C',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignSelf: 'flex-start'
+  },
+
   nextText: { 
     color: '#fff', 
     fontWeight: '700', 
