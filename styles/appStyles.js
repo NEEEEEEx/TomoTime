@@ -266,14 +266,15 @@ const styles = StyleSheet.create({
   },
   //====================================//
 
-  //========= Semester Card Styles =======//
+  //========= Card Styles =======//
   cardWrapper: {
     marginTop: 12,
     borderRadius: 15,
     padding: 14,
     elevation: 4,
     borderWidth: 2,
-    borderColor: '#FFBE5B'
+    borderColor: '#FFBE5B',
+    backgroundColor: 'white',
   },
   
   cardSelected: {
