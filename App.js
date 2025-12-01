@@ -27,7 +27,7 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Welcome"
+        initialRouteName="MultiStep"
         screenOptions={{
           headerTransparent: true,
           headerShadowVisible: false,
