@@ -64,6 +64,7 @@ export default function EditFreeTimeModal({visible, onClose, onSave, initial}) {
             <Text style={styles.label}>Day</Text>
             <SelectList
               data={days}
+              value={day}
               setSelected={setDay}
               defaultOption={{key: days.find(d=>d.value===day)?.key, value: day}}
               placeholder={day || 'Select a day...'}

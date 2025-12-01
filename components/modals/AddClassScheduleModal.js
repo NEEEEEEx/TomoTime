@@ -16,7 +16,7 @@ import styles from '../../styles/modalStyles';
 
 export default function AddClassScheduleModal({visible, onClose, onAdd}) {
   const [title, setTitle] = useState('');
-  const [day, setDay] = useState('');
+  const [day, setDay] = useState(null);
   const [startTime, setStartTime] = useState('00:00');
   const [endTime, setEndTime] = useState('00:00');
 
@@ -74,6 +74,7 @@ export default function AddClassScheduleModal({visible, onClose, onAdd}) {
                 {key:'6', value:'Saturday'},
                 {key:'7', value:'Sunday'},
               ]}
+              value={day}
               setSelected={setDay}
               placeholder="Select a day..."
               boxStyles={styles.input}
