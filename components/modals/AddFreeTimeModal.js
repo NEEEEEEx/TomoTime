@@ -62,6 +62,7 @@ export default function AddFreeTimeModal({visible, onClose, onAdd}) {
                 {key:'6', value:'Saturday'},
                 {key:'7', value:'Sunday'},
               ]}
+              value={day}
               setSelected={setDay}
               placeholder="Select a day..."
               boxStyles={styles.input}

@@ -15,7 +15,7 @@ import styles from '../../styles/modalStyles';
 
 export default function EditClassScheduleModal({visible, onClose, onSave, initial}) {
   const [title, setTitle] = useState('');
-  const [day, setDay] = useState('');
+  const [day, setDay] = useState(null);
   const [startTime, setStartTime] = useState('00:00');
   const [endTime, setEndTime] = useState('00:00');
 
@@ -81,6 +81,7 @@ export default function EditClassScheduleModal({visible, onClose, onSave, initia
             <Text style={styles.label}>Day</Text>
             <SelectList
               data={days}
+              value={day}
               setSelected={setDay}
               defaultOption={{key: days.find(d=>d.value===day)?.key, value: day}}
               placeholder={day || 'Select a day...'}
