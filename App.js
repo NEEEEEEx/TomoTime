@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Welcome from './screens/Welcome';
 import MultiStep from './screens/MultiStep';
+import CalendarPage from './screens/CalendarPage';
 
 // Assuming you are using a library like react-native-dotenv for environment variables
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID } from '@env';
@@ -27,7 +28,7 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="MultiStep"
+        initialRouteName="Welcome"
         screenOptions={{
           headerTransparent: true,
           headerShadowVisible: false,
@@ -48,6 +49,13 @@ const App = () => {
         <Stack.Screen 
           name="MultiStep" 
           component={MultiStep} 
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="CalendarPage" 
+          component={CalendarPage} 
           options={{
             headerShown: false,
           }}
