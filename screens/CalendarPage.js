@@ -337,7 +337,9 @@ export default function CalendarPage () {
         </View>
         {/* -------- Render Dynamic Task Cards List ------- */}
         {filteredTasks.map(task => (
-          renderTaskItem({ item: task })
+          <View key={task.id}>
+            {renderTaskItem({ item: task })}
+          </View>
         ))}
         {/* -------- End of Dynamic Task Cards List -------- */}
       </ScrollView>

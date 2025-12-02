@@ -28,7 +28,7 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Welcome"
+        initialRouteName="CalendarPage"
         screenOptions={{
           headerTransparent: true,
           headerShadowVisible: false,
