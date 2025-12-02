@@ -218,7 +218,6 @@ export default function MultiStep() {
   // 2. Render Class Schedule Card (Display Only)
   const renderClassItem = ({ item }) => (
     <View style={styles.cardWrapper}> 
-      {/* You can add LinearGradient here if you want the cream background */}
       <View style={styles.cardHeaderRow}>
         <Text style={[styles.cardTitle, { color: '#000' }]}>{item.title}</Text>
          <View style={styles.rightIcons}>
@@ -371,7 +370,7 @@ export default function MultiStep() {
         contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 20 }}
         showsVerticalScrollIndicator={false}
       />
-      {/* -------- End of Semester Cards List -------- */}
+      {/* -------- End of Dynamic Cards List -------- */}
 
       {/* -------- Add Modal -------- */}
       {currentPosition === 0 && <AddSemesterModal visible={addModalVisible} onClose={()=>setAddModalVisible(false)} onAdd={handleAddSemester} />}

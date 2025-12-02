@@ -1,12 +1,14 @@
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
+  //========= CONTAINER STYLES =======//
   container: {
     flex: 1,
     maxWidth: 600,
     width: '100%',
     backgroundColor: '#1C1C1C',
     paddingBottom: 25,
+    fontFamily: 'Quicksand-Regular',
   },
   background: {
     flex: 1,
@@ -73,7 +75,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 40,
-    width: '90%',
     maxWidth: 350,
     elevation: 9,
     borderRadius: 30,
@@ -87,6 +88,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 30,
+    gap: 10,
     width: '100%',
   },
   buttonText: {
@@ -275,6 +277,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FFBE5B',
     backgroundColor: 'white',
+    width: 320,
+    minHeight: 120,
+    alignSelf: 'center',
   },
   
   cardSelected: {
@@ -316,7 +321,19 @@ const styles = StyleSheet.create({
   timeValue: { 
     color: '#2c1f17', 
     fontWeight: '700' 
-  }
+  },
   //=====================================//
+
+  //========= Calendar Styles =======//
+  calendar: {
+    backgroundColor: '#FEFEFE',
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: '#FFBE5B',
+    padding: 15,
+    marginBottom: 16,
+    width: 350,
+    elevation: 7,
+  },
 });
 export default styles;

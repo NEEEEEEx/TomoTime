@@ -3,5 +3,5 @@ module.exports = {
     android: {},
     ios: {},
   },
-  assets: ["C:\react-native\TomoTime\assests\fonts"],
+  assets: ["./assests/fonts/"],
 };
