@@ -19,6 +19,20 @@ import { Calendar } from 'react-native-calendars';
 export default function CalendarPage () {
   const navigation = useNavigation();
   const [selectedDate, setSelectedDate] = useState('');
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  //=========== Burger Menu ============//
+  const toggleMenu = () => {
+    setMenuVisible(!menuVisible);
+  }
+
+  const handleMenuItemPress = (screen, stepIdx) => {
+    setMenuVisible(false);
+
+    navigation.navigate(screen, {initialStep: stepIdx});
+  }
+  //===================================//
+
 
   //=========== Sample Data for Tasks ===========//
   const [tasks] = useState([
@@ -224,10 +238,39 @@ export default function CalendarPage () {
           {/* ----- App Header (menu, title, profile) ----- */}
           <View style={styles.headerRow}>
             <View style={styles.leftHeader}>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={toggleMenu}>
                 <FontAwesome5 name="bars" size={22} color="#461F04" />
               </TouchableOpacity>
             </View>
+
+            {/* -------- Burger Menu Dropdown -------- */}
+            {menuVisible && (
+              <View style={styles.burgerMenu}>
+                <TouchableOpacity 
+                  style={[styles.menuItem,{
+                    borderBottomWidth: 1,
+                    borderColor: '#3d060633'
+                  }]} 
+                  onPress={() => handleMenuItemPress('MultiStep', 0)}>
+                  <Text style={styles.menuText}>Semester</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.menuItem,{
+                    borderBottomWidth: 1,
+                    borderColor: '#3d060633'
+                  }]} 
+                  onPress={() => handleMenuItemPress('MultiStep', 1)}>
+                  <Text style={styles.menuText}>Class Schedule</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.menuItem} 
+                  onPress={() => handleMenuItemPress('MultiStep', 2)}>
+                  <Text style={styles.menuText}>Free Time</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             <View style={styles.titleWrap}>
               <Text style={styles.headerTitle}>Tomo Time</Text>
