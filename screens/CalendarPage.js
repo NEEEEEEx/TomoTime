@@ -88,6 +88,7 @@ export default function CalendarPage () {
         return {
           borderColor: '#FFBE5B',
           iconColor: '#FFBE5B',
+          dotColor: '#FFBE5B'
         };
       case 'Break':
         return {
@@ -98,6 +99,7 @@ export default function CalendarPage () {
         return {
           borderColor: '#FF8A8A',
           iconColor: '#FF8A8A',
+          dotColor: '#FF8A8A',
         };
       default:
         return {
@@ -139,8 +141,6 @@ export default function CalendarPage () {
                 paddingHorizontal: 10,
                 paddingVertical: 4,
                 borderRadius: 20,
-                borderWidth: 1,
-                borderColor,
               }}
             >
               <Text
@@ -219,6 +219,28 @@ export default function CalendarPage () {
   ? tasks.filter(task => task.date === selectedDate)
   : tasks;
   //============== End of Filter Tasks by Selected Date ================//
+
+  //=========== Marked Dates for Calendar ===========//
+  const markedDates = {};
+
+  // Mark all tasks
+  tasks.forEach(task => {
+    const colors = getTaskColors(task.taskType);
+
+    markedDates[task.date] = {
+      marked: true,
+      dotColor: colors.dotColor || '#FFBE5B',
+    };
+  });
+
+  // Add selected date highlight
+  if (selectedDate) {
+    markedDates[selectedDate] = {
+      ...(markedDates[selectedDate] || {}),
+      selected: true,
+      selectedColor: '#ffbe5b',
+    };
+  }
 
   // ================= DISPLAY =================//
   return (
@@ -365,16 +387,7 @@ export default function CalendarPage () {
                 setSelectedDate(day.dateString);
               }}
               // Mark specific dates as marked
-              markedDates={{
-                [selectedDate]: { 
-                  selected: true,
-                  marked: true, 
-                  selectedColor: '#ffbe5b' 
-                },
-
-                '2025-12-05': { marked: true },
-                '2025-12-06': { marked: true },
-              }}
+              markedDates={markedDates}
             />
           </View>
         </View>
