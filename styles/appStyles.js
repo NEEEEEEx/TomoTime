@@ -335,5 +335,30 @@ const styles = StyleSheet.create({
     width: 350,
     elevation: 7,
   },
+  //=================================//
+
+  //========== Burger Menu ==========//
+  burgerMenu: {
+    position: 'absolute', // This makes it float
+    top: 60, // Adjust distance from top to align with hamburger
+    left: 5, // Align with left margin
+    backgroundColor: '#b91c1c', // The deep red color
+    borderRadius: 10,
+    paddingVertical: 5,
+    width: 200,
+    elevation: 10,
+    zIndex: 100, // Forces it to be on top of everything else
+  },
+
+  menuItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+  },
+  menuText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+  }
 });
 export default styles;

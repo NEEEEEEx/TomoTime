@@ -19,6 +19,20 @@ import { Calendar } from 'react-native-calendars';
 export default function CalendarPage () {
   const navigation = useNavigation();
   const [selectedDate, setSelectedDate] = useState('');
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  //=========== Burger Menu ============//
+  const toggleMenu = () => {
+    setMenuVisible(!menuVisible);
+  }
+
+  const handleMenuItemPress = (screen, stepIdx) => {
+    setMenuVisible(false);
+
+    navigation.navigate(screen, {initialStep: stepIdx});
+  }
+  //===================================//
+
 
   //=========== Sample Data for Tasks ===========//
   const [tasks] = useState([
@@ -74,6 +88,7 @@ export default function CalendarPage () {
         return {
           borderColor: '#FFBE5B',
           iconColor: '#FFBE5B',
+          dotColor: '#FFBE5B'
         };
       case 'Break':
         return {
@@ -84,6 +99,7 @@ export default function CalendarPage () {
         return {
           borderColor: '#FF8A8A',
           iconColor: '#FF8A8A',
+          dotColor: '#FF8A8A',
         };
       default:
         return {
@@ -125,8 +141,6 @@ export default function CalendarPage () {
                 paddingHorizontal: 10,
                 paddingVertical: 4,
                 borderRadius: 20,
-                borderWidth: 1,
-                borderColor,
               }}
             >
               <Text
@@ -206,6 +220,28 @@ export default function CalendarPage () {
   : tasks;
   //============== End of Filter Tasks by Selected Date ================//
 
+  //=========== Marked Dates for Calendar ===========//
+  const markedDates = {};
+
+  // Mark all tasks
+  tasks.forEach(task => {
+    const colors = getTaskColors(task.taskType);
+
+    markedDates[task.date] = {
+      marked: true,
+      dotColor: colors.dotColor || '#FFBE5B',
+    };
+  });
+
+  // Add selected date highlight
+  if (selectedDate) {
+    markedDates[selectedDate] = {
+      ...(markedDates[selectedDate] || {}),
+      selected: true,
+      selectedColor: '#ffbe5b',
+    };
+  }
+
   // ================= DISPLAY =================//
   return (
     <ImageBackground 
@@ -224,10 +260,39 @@ export default function CalendarPage () {
           {/* ----- App Header (menu, title, profile) ----- */}
           <View style={styles.headerRow}>
             <View style={styles.leftHeader}>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={toggleMenu}>
                 <FontAwesome5 name="bars" size={22} color="#461F04" />
               </TouchableOpacity>
             </View>
+
+            {/* -------- Burger Menu Dropdown -------- */}
+            {menuVisible && (
+              <View style={styles.burgerMenu}>
+                <TouchableOpacity 
+                  style={[styles.menuItem,{
+                    borderBottomWidth: 1,
+                    borderColor: '#3d060633'
+                  }]} 
+                  onPress={() => handleMenuItemPress('MultiStep', 0)}>
+                  <Text style={styles.menuText}>Semester</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.menuItem,{
+                    borderBottomWidth: 1,
+                    borderColor: '#3d060633'
+                  }]} 
+                  onPress={() => handleMenuItemPress('MultiStep', 1)}>
+                  <Text style={styles.menuText}>Class Schedule</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.menuItem} 
+                  onPress={() => handleMenuItemPress('MultiStep', 2)}>
+                  <Text style={styles.menuText}>Free Time</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             <View style={styles.titleWrap}>
               <Text style={styles.headerTitle}>Tomo Time</Text>
@@ -322,16 +387,7 @@ export default function CalendarPage () {
                 setSelectedDate(day.dateString);
               }}
               // Mark specific dates as marked
-              markedDates={{
-                [selectedDate]: { 
-                  selected: true,
-                  marked: true, 
-                  selectedColor: '#ffbe5b' 
-                },
-
-                '2025-12-05': { marked: true },
-                '2025-12-06': { marked: true },
-              }}
+              markedDates={markedDates}
             />
           </View>
         </View>

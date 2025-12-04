@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -64,10 +64,9 @@ const stepsIndicatorStyles = {
 //==================================//
 
 
-export default function MultiStep() {
+export default function MultiStep({ navigation, route}) {
   // =========== Use States ============ //
   const [currentPosition, setCurrentPosition] = useState(0);// Step Indicator Posistion
-  
   const [addModalVisible, setAddModalVisible] = useState(false); // Add New Item Modal Visibility
   const [editModalVisible, setEditModalVisible] = useState(false); // Edit Item Modal Visibility
   const [itemToEdit, setItemToEdit] = useState(null); // currently editing item
@@ -92,6 +91,18 @@ export default function MultiStep() {
   ]);
   //================================================//
 
+  //=========== Use Effect for Route Params ===========//
+  //This is for Burger Menu Navigation to Specific Step
+  useEffect(() => {
+    const initial = route?.params?.initialStep;
+    if (initial !== undefined && initial !== null) {
+      // ensure number and within range 0..2
+      const stepIndex = Math.max(0, Math.min(2, Number(initial)));
+      setCurrentPosition(stepIndex);
+    }
+  }, [route?.params?.initialStep]);
+  //================================================//
+  
   //============ Steps Navigation ============//
   const goNext = () => {
     if (currentPosition < 2) {
