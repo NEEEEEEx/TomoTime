@@ -371,7 +371,7 @@ export default function CalendarPage () {
             </Text>
 
             {/* ----- Ask Tomo Button (gradient) -----*/}
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('ChatAi')}>
               <LinearGradient
                 colors={['#FF3F41', '#FFBE5B']}
                 start={{ x: 0, y: 0 }}

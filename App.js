@@ -5,6 +5,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Welcome from './screens/Welcome';
 import MultiStep from './screens/MultiStep';
 import CalendarPage from './screens/CalendarPage';
+import ChatAi from './screens/ChatAi';
 
 // Assuming you are using a library like react-native-dotenv for environment variables
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID } from '@env';
@@ -56,6 +57,13 @@ const App = () => {
         <Stack.Screen 
           name="CalendarPage" 
           component={CalendarPage} 
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="ChatAi" 
+          component={ChatAi} 
           options={{
             headerShown: false,
           }}

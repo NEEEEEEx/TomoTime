@@ -359,6 +359,148 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
-  }
+  },
+
+  //========= Chat AI Screen: Hero & Chat Layout =========//
+  chatHeroWrap: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    marginTop: 10,
+  },
+  chatHeroImage: {
+    width: 180,
+    height: 180,
+  },
+  chatHeroTitle: {
+    fontSize: 28,
+    color: '#2d0c08',
+    fontFamily: 'Quicksand-Bold',
+    marginTop: -12,
+  },
+  chatHeroSubtitle: {
+    fontSize: 13,
+    color: '#2d0c08',
+    fontFamily: 'Quicksand-SemiBold',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  chatHeroCaption: {
+    fontSize: 12,
+    color: '#a65c26',
+    marginTop: 6,
+    fontFamily: 'Quicksand-Regular',
+  },
+  chatWindow: {
+    flex: 1,
+    marginTop: 10,
+  },
+  //============================================//
+
+  //========= Chat AI Screen: Messages =========//
+  chatMessageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginVertical: 6,
+  },
+  chatAvatarWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  chatAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+  },
+  chatBubble: {
+    maxWidth: '78%',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  chatBotBubble: {
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+  },
+  chatUserBubble: {
+    backgroundColor: '#e48f27',
+    borderTopRightRadius: 4,
+  },
+  chatBubbleText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  chatBotText: {
+    color: '#2d0c08',
+    fontFamily: 'Quicksand-Medium',
+  },
+  chatUserText: {
+    color: '#ffffff',
+    fontFamily: 'Quicksand-Bold',
+  },
+  chatPillBubble: {
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minWidth: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatPillText: {
+    fontSize: 15,
+    fontFamily: 'Quicksand-Bold',
+  },
+  //============================================//
+
+  //========= Chat AI Screen: Input Bar =========//
+  chatInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    paddingTop: 4,
+    backgroundColor: 'transparent',
+  },
+  chatInput: {
+    flex: 1,
+    backgroundColor: '#f8e7d6',
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    color: '#2d0c08',
+    fontFamily: 'Quicksand-Medium',
+    marginRight: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 3,
+  },
+  chatSendButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  //============================================//
 });
 export default styles;
