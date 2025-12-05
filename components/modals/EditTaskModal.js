@@ -11,48 +11,97 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { SelectList } from 'react-native-dropdown-select-list';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import styles from '../../styles/modalStyles';
 
 export default function EditTaskModal({visible, onClose, onSave, initial}) {
-  const [title, setTitle] = useState('');
-  const [priority, setPriority] = useState(null);
-  const [description, setDescription] = useState('');
-  const [startTime, setStartTime] = useState('00:00');
-  const [endTime, setEndTime] = useState('00:00');
 
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [date, setDate] = useState(new Date());
+  const [priority, setPriority] = useState(null);
+  const [startTime, setStartTime] = useState(new Date());
+  const [endTime, setEndTime] = useState(new Date());
+
+//================= Load Initial Data ==============//
   useEffect(() => {
     if (initial) {
-      setTitle(initial.title ?? '');
-      setPriority(initial.priority ?? '');
-      setDescription(initial.description ?? '');
-      setStartTime(initial.startTime ?? '00:00');
-      setEndTime(initial.endTime ?? '00:00');
-    } else {
-      setTitle('');
-      setPriority('');
-      setStartTime('00:00');
-      setEndTime('00:00');
+      setTitle(initial.title || "");
+      setDescription(initial.description || "");
+      setPriority(initial.priority || null);
+  
+      // Convert strings to JS Dates
+      if (initial.date) 
+        setDate(new Date(initial.date));
+      if (initial.startTime) 
+        setStartTime(new Date(`${initial.date}T${initial.startTime}`));
+      if (initial.endTime) 
+        setEndTime(new Date(`${initial.date}T${initial.endTime}`));
     }
   }, [initial, visible]);
-
+//=============== End of Load Initial Data ================//
+  
+  function handleSave() {
+    onSave({
+      taskId: initial.taskId, title, description, priority,
+      date: date.toISOString().split("T")[0], // yyyy-mm-dd
+      startTime: formatTime(startTime),
+      endTime: formatTime(endTime)
+    });
+  }
+  
   const priorityLevels = [
     {key:'1', value:'Low'},
     {key:'2', value:'Medium'},
     {key:'3', value:'High'},
   ];
 
-  function handleSave() {
-    const payload = {
-      ...initial,
-      title: title || initial?.title || 'Untitled Task',
-      priority: priority || initial?.priority || 'Low',
-      description: description || initial?.description || 'No description',
-      startTime: startTime || initial?.startTime || '',
-      endTime: endTime || initial?.endTime || '00:00',
-    };
-    if (onSave) onSave(payload);
-    onClose();
-  }
+  //============ Date and Time Pickers =========//
+
+  // Start Time Picker
+  const openStartTimePicker = () => {
+    DateTimePickerAndroid.open({
+      value: startTime,
+      onChange: (event, selectedTime) => {
+        if (selectedTime) 
+          setStartTime(selectedTime);
+      },
+      mode: 'time',
+      is24Hour: false
+    });
+  };
+  
+  // End Time Picker
+  const openEndTimePicker = () => {
+    DateTimePickerAndroid.open({
+      value: endTime,
+      onChange: (event, selectedTime) => {
+        if (selectedTime) 
+          setEndTime(selectedTime);
+      },
+      mode: 'time',
+      is24Hour: false
+    });
+  };
+
+  // Date Picker
+  const openDatePicker = () => {
+    DateTimePickerAndroid.open({
+      value: date,
+      onChange: (event, selectedDate) => {
+        if (selectedDate)
+          setDate(selectedDate);
+        },
+      mode: 'date',
+    });
+  };
+  //============ End of Date and Time Pickers =========//
+
+  //============ Date and Time Formatting Helpers =========//
+  const formatDate = d => d?.toLocaleDateString() || 'Select date';
+  const formatTime = t => t?.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' }) ||
+  'Select time';
+  //============ End of Date and Time Formatting Helpers =========//
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
@@ -66,52 +115,54 @@ export default function EditTaskModal({visible, onClose, onSave, initial}) {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.subtitle}>Update your Task details</Text>
+            <Text style={styles.subtitle}>Edit your Task details</Text>
 
-            <Text style={styles.label}>Class Name</Text>
+            <Text style={styles.label}>Task Name</Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
-              placeholder="Quiz 1 - Subject Name"
               style={styles.input}
               placeholderTextColor="#bfbfbf"
             />
+
+            <Text style={styles.label}>Description</Text>
+            <TextInput
+              value={description}
+              onChangeText={setDescription}
+              style={styles.input}
+              placeholderTextColor="#bfbfbf"
+            />
+
+            <Text style={styles.label}>Date</Text>
+            <TouchableOpacity style={styles.input} onPress={openDatePicker}>
+              <Text style={styles.label}>{formatDate(date)}</Text>
+            </TouchableOpacity>
 
             <Text style={styles.label}>Priority Level</Text>
             <SelectList
               data={priorityLevels}
               value={priority}
               setSelected={setPriority}
-              defaultOption={{key: days.find(d=>d.value===priority)?.key, value: priority}}
-              placeholder={priority || 'Select a priority...'}
+              defaultOption={priorityLevels.find(p => p.value === priority)}
               boxStyles={styles.input}
               inputStyles={{color: '#333'}}
               dropdownTextStyles={{color: '#333'}}
             />
-{/* ============= FIX THE TIME INPUT ================= */}
+
             <View style={styles.rowInputs}>
               <View style={styles.smallInputWrap}>
                 <Text style={styles.smallLabel}>Start Time </Text>
-                <TextInput
-                  value={startTime}
-                  onChangeText={setStartTime}
-                  keyboardType="numeric"
-                  style={styles.smallInput}
-                  editable={initial?.taskType !== 'Deadline'}
-                  selectTextOnFocus={initial?.taskType !== 'Deadline'}
-                />
+                <TouchableOpacity style={styles.smallInput} onPress={openStartTimePicker}>
+                  <Text style={styles.smallLabel}>{formatTime(startTime)}</Text>
+                </TouchableOpacity>
               </View>
               <View style={styles.smallInputWrap}>
                 <Text style={styles.smallLabel}>End Time</Text>
-                <TextInput
-                  value={endTime}
-                  onChangeText={setEndTime}
-                  keyboardType="numeric"
-                  style={styles.smallInput}
-                />
+                <TouchableOpacity style={styles.smallInput} onPress={openEndTimePicker}>
+                  <Text style={styles.smallLabel}>{formatTime(endTime)}</Text>
+                </TouchableOpacity>
               </View>
             </View>
-{/* ============================================== */}
 
             <TouchableOpacity activeOpacity={0.9} onPress={handleSave} style={styles.addBtnWrap}>
               <LinearGradient colors={["#FF5A4A", "#FFB84E"]} style={styles.addBtn} start={{x:0,y:0}} end={{x:1,y:0}}>
