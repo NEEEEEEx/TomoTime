@@ -19,24 +19,40 @@ export default function EditTaskModal({visible, onClose, onSave, initial}) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date());
-  const [priority, setPriority] = useState(null);
+  const [priority, setPriority] = useState('');
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
 
 //================= Load Initial Data ==============//
+  // Convert "03:30 PM" into a Date on the same day as dateStr
+  const parseTimeForDate = (dateString, timeString) => {
+    if (!dateString || !timeString) return new Date();
+    const [year, month, day] = dateString.split('-').map(Number);
+    const [timePart, modifier] = timeString.trim().split(/\s+/); // "03:30" "PM"
+    const [rawHour, rawMinute] = timePart.split(':').map(Number);
+    let hours = rawHour;
+    let minutes = rawMinute || 0;
+    if (modifier?.toLowerCase() === 'pm' && hours < 12) hours += 12;
+    if (modifier?.toLowerCase() === 'am' && hours === 12) hours = 0;
+    return new Date(year, (month || 1) - 1, day || 1, hours, minutes);
+  };
+
   useEffect(() => {
     if (initial) {
+      const priorityMap = {1:'Low',2:'Medium',3:'High'}; // For converting numeric display to text in Priority Level
+
       setTitle(initial.title || "");
       setDescription(initial.description || "");
-      setPriority(initial.priority || null);
+      setPriority(priorityMap[initial.priority] || '');
+
   
       // Convert strings to JS Dates
       if (initial.date) 
         setDate(new Date(initial.date));
       if (initial.startTime) 
-        setStartTime(new Date(`${initial.date}T${initial.startTime}`));
+        setStartTime(parseTimeForDate(initial.date, initial.startTime));
       if (initial.endTime) 
-        setEndTime(new Date(`${initial.date}T${initial.endTime}`));
+        setEndTime(parseTimeForDate(initial.date, initial.endTime));
     }
   }, [initial, visible]);
 //=============== End of Load Initial Data ================//
@@ -98,9 +114,10 @@ export default function EditTaskModal({visible, onClose, onSave, initial}) {
   //============ End of Date and Time Pickers =========//
 
   //============ Date and Time Formatting Helpers =========//
-  const formatDate = d => d?.toLocaleDateString() || 'Select date';
-  const formatTime = t => t?.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' }) ||
-  'Select time';
+  const formatDate = d => (d && !isNaN(d.getTime()) ? d.toLocaleDateString() : 'Select date');
+  const formatTime = t => (t && !isNaN(t.getTime())
+    ? t.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' })
+    : 'Select time');
   //============ End of Date and Time Formatting Helpers =========//
 
   return (
@@ -141,6 +158,7 @@ export default function EditTaskModal({visible, onClose, onSave, initial}) {
             <Text style={styles.label}>Priority Level</Text>
             <SelectList
               data={priorityLevels}
+              save="value"
               value={priority}
               setSelected={setPriority}
               defaultOption={priorityLevels.find(p => p.value === priority)}
