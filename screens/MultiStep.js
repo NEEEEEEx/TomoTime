@@ -211,10 +211,19 @@ export default function MultiStep({ navigation, route}) {
             {/* Edit/Trash Icons */}
             <View style={styles.rightIcons}>
               <TouchableOpacity onPress={() => handleOpenEditSemester(item)}>
-                <FontAwesome5 name="edit" size={16} color={isSelected ? 'white' : "#FFBE5B"} style={{ marginRight: 12 }} />
+                <FontAwesome5 
+                  name="edit" 
+                  size={16} 
+                  color={isSelected ? 'white' : "#FFBE5B"} 
+                  style={{ marginRight: 12 }} 
+                />
               </TouchableOpacity>
               <TouchableOpacity onPress={()=>handleDeleteSemester(item.id)}>
-                <FontAwesome name="trash" size={16} color={isSelected ? 'white' : "#FFBE5B"} />
+                <FontAwesome 
+                  name="trash" 
+                  size={16} 
+                  color={isSelected ? 'white' : "#FFBE5B"} 
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -230,19 +239,32 @@ export default function MultiStep({ navigation, route}) {
   const renderClassItem = ({ item }) => (
     <View style={styles.cardWrapper}> 
       <View style={styles.cardHeaderRow}>
-        <Text style={[styles.cardTitle, { color: '#000' }]}>{item.title}</Text>
-         <View style={styles.rightIcons}>
-            <TouchableOpacity onPress={() => handleOpenEditClass(item)}>
-              <FontAwesome5 name="edit" size={16} color="#FFBE5B" style={{ marginRight: 12 }} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDeleteClassSchedule(item.id)}>
-              <FontAwesome name="trash" size={16} color="#FFBE5B" />
-            </TouchableOpacity>
-         </View>
+        <Text style={[styles.cardTitle, { color: '#000' }]}>
+            {item.title}
+        </Text>
+        <View style={styles.rightIcons}>
+          <TouchableOpacity onPress={() => handleOpenEditClass(item)}>
+            <FontAwesome5 
+              name="edit" 
+              size={16} 
+              color="#FFBE5B" 
+              style={{ marginRight: 12 }} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleDeleteClassSchedule(item.id)}>
+            <FontAwesome 
+            name="trash" 
+            size={16} 
+            color="#FFBE5B" />
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={{ marginTop: 5 }}>
-        <Text style={{ color: '#333', fontWeight: 'bold' }}>Day: {item.day}</Text>
-        <Text style={{ color: '#333' }}>Time: {item.time}</Text>
+        <Text style={{ color: '#333', fontWeight: 'bold' }}>
+          Day: {item.day}
+        </Text>
+        <Text style={{ color: '#333' }}>
+          Time: {item.time}
+        </Text>
       </View>
     </View>
   );
@@ -254,10 +276,19 @@ export default function MultiStep({ navigation, route}) {
         <Text style={[styles.cardTitle, { color: '#000' }]}>{item.title}</Text>
          <View style={styles.rightIcons}>
             <TouchableOpacity onPress={() => handleOpenEditFreeTime(item)}>
-              <FontAwesome5 name="edit" size={16} color="#FFBE5B" style={{ marginRight: 12 }} />
+              <FontAwesome5 
+                name="edit" 
+                size={16} 
+                color="#FFBE5B" 
+                style={{ marginRight: 12 }} 
+              />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => handleDeleteFreeTime(item.id)}>
-              <FontAwesome name="trash" size={16} color="#FFBE5B" />
+              <FontAwesome 
+                name="trash" 
+                size={16} 
+                color="#FFBE5B" 
+              />
             </TouchableOpacity>
          </View>
       </View>
@@ -349,18 +380,30 @@ export default function MultiStep({ navigation, route}) {
           {currentPosition > 0 && (
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
               <Text style={styles.nextText}>Back</Text>
-              <FontAwesome name="angle-double-left" size={18} color="#fff" />
+              <FontAwesome 
+                name="angle-double-left" 
+                size={18} 
+                color="#fff" 
+              />
             </TouchableOpacity>
           )}
 
           <TouchableOpacity style={styles.addButton} onPress={()=>setAddModalVisible(true)}> 
-            <FontAwesome name="plus" size={18} color="#fff" />
+            <FontAwesome 
+              name="plus" 
+              size={18} 
+              color="#fff" 
+            />
             <Text style={styles.addText}> Add</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.nextButton} onPress={goNext}>
             <Text style={styles.nextText}>Next </Text>
-            <FontAwesome name="angle-double-right" size={18} color="#fff" />
+            <FontAwesome 
+              name="angle-double-right" 
+              size={18} 
+              color="#fff" 
+            />
           </TouchableOpacity>
         </View>
         {/* -------- End of Steps Buttons -------- */}
@@ -384,15 +427,48 @@ export default function MultiStep({ navigation, route}) {
       {/* -------- End of Dynamic Cards List -------- */}
 
       {/* -------- Add Modal -------- */}
-      {currentPosition === 0 && <AddSemesterModal visible={addModalVisible} onClose={()=>setAddModalVisible(false)} onAdd={handleAddSemester} />}
-      {currentPosition === 1 && <AddClassScheduleModal visible={addModalVisible} onClose={()=>setAddModalVisible(false)} onAdd={handleAddClassSchedule}/>}
-      {currentPosition === 2 && <AddFreeTimeModal visible={addModalVisible} onClose={()=>setAddModalVisible(false)} onAdd={handleAddFreeTime}/>}
+      {currentPosition === 0 && 
+        <AddSemesterModal 
+          visible={addModalVisible} 
+          onClose={()=>setAddModalVisible(false)} 
+          onAdd={handleAddSemester} 
+      />}
+      {currentPosition === 1 && 
+        <AddClassScheduleModal 
+          visible={addModalVisible} 
+          onClose={()=>setAddModalVisible(false)} 
+          onAdd={handleAddClassSchedule}
+      />}
+      {currentPosition === 2 && 
+        <AddFreeTimeModal 
+          visible={addModalVisible} 
+          onClose={()=>setAddModalVisible(false)} 
+          onAdd={handleAddFreeTime}
+      />}
       {/* -------- End of Add Modal -------- */}
 
       {/* -------- Edit Modal -------- */}
-      {currentPosition === 0 && <EditSemesterModal visible={editModalVisible} onClose={()=>{setEditModalVisible(false); setItemToEdit(null);}} initial={itemToEdit} onSave={handleSaveSemester} />}
-      {currentPosition === 1 && <EditClassScheduleModal visible={editModalVisible} onClose={()=>{setEditModalVisible(false); setItemToEdit(null);}} initial={itemToEdit} onSave={handleSaveClassSchedule}/>}
-      {currentPosition === 2 && <EditFreeTimeModal visible={editModalVisible} onClose={()=>{setEditModalVisible(false); setItemToEdit(null);}} initial={itemToEdit} onSave={handleSaveFreeTime}/>}
+      {currentPosition === 0 && 
+        <EditSemesterModal 
+          visible={editModalVisible} 
+          onClose={()=>{setEditModalVisible(false); setItemToEdit(null);}} 
+          initial={itemToEdit} 
+          onSave={handleSaveSemester} 
+        />}
+      {currentPosition === 1 && 
+        <EditClassScheduleModal 
+          visible={editModalVisible} 
+          onClose={()=>{setEditModalVisible(false); setItemToEdit(null);}} 
+          initial={itemToEdit} onSave={handleSaveClassSchedule}
+      />}
+      {currentPosition === 2 && 
+        <EditFreeTimeModal 
+          visible={editModalVisible} 
+          onClose={()=>{setEditModalVisible(false); 
+          setItemToEdit(null);}} 
+          initial={itemToEdit} 
+          onSave={handleSaveFreeTime}
+      />}
       {/* -------- End of Edit Modal -------- */}
     </ImageBackground>
   );

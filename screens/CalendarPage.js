@@ -5,21 +5,25 @@ import {
   ImageBackground,
   Image,
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  Alert
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+import { Calendar } from 'react-native-calendars';
 import Octicons from 'react-native-vector-icons/Octicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import styles from '../styles/appStyles';
-import { useNavigation } from '@react-navigation/native';
-import { Calendar } from 'react-native-calendars';
+import EditTaskModal from '../components/modals/EditTaskModal';
 
 
 export default function CalendarPage () {
   const navigation = useNavigation();
   const [selectedDate, setSelectedDate] = useState('');
   const [menuVisible, setMenuVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState(null);
 
   //=========== Burger Menu ============//
   const toggleMenu = () => {
@@ -35,53 +39,53 @@ export default function CalendarPage () {
 
 
   //=========== Sample Data for Tasks ===========//
-  const [tasks] = useState([
+  const [tasks, setTasks] = useState([
     { 
-      id: '11', 
+      taskId: '11', 
       title: 'Quiz 1 - IIT414 (Part 1)', 
       description: 'Coverage: JS Basics, React Hooks, Async Storage', 
       date: '2025-12-02', 
       day: 'Saturday',
-      timeStart: '14:00',
-      timeEnd: '15:00',
+      startTime: '14:00',
+      endTime: '15:00',
       priority: 'Medium',
       taskType: 'Study', // Possible values: 'Study', 'Break', 'Deadline'
     },
     { 
-      id: '12', 
+      taskId: '12', 
       title: 'Break Time', 
       description: 'Short recharge between study blocks', 
       date: '2025-12-02', 
       day: 'Saturday',
-      timeStart: '15:00',
-      timeEnd: '15:15',
+      startTime: '15:00',
+      endTime: '15:15',
       taskType: 'Break', // Possible values: 'Study', 'Break', 'Deadline'
     },
     { 
-      id: '13', 
+      taskId: '13', 
       title: 'Project 1 - IIT414 (Part 1)', 
       description: 'Coverage: Virtual Assistant System Testing', 
       date: '2025-12-02', 
       day: 'Saturday',
-      timeStart: '15:15',
-      timeEnd: '16:15',
+      startTime: '15:15',
+      endTime: '16:15',
       priority: 'High',
       taskType: 'Study', // Possible values: 'Study', 'Break', 'Deadline'
     },
     { 
-      id: '14', 
+      taskId: '14', 
       title: 'Project 1 - IIT414 ', 
       description: 'Coverage: Virtual Assistant System Testing', 
       date: '2025-12-12', 
       day: 'Saturday',
-      timeEnd: '23:59',
+      endTime: '23:59',
       priority: 'High',
       taskType: 'Deadline', // Possible values: 'Study', 'Break', 'Deadline'
     },
   ]);
   //==============================================//
 
-  //=========== Helpers ===========//
+  //=========== Task Type Color Identifiers ===========//
   const getTaskColors = (taskType) => {
     switch (taskType) {
       case 'Study':
@@ -110,6 +114,35 @@ export default function CalendarPage () {
   };
   //==============================================//
 
+  //=================== Task Handlers ====================//
+  // Open/Close Modal Task Editor  
+  const handleOpenEditTask = (item) => {
+    setItemToEdit(item);
+    setEditModalVisible(true);
+  };
+
+  // Save Task Edit Button
+  const handleSaveTask = (saveData) => {
+    setTasks(prev =>
+      prev.map(task => 
+        task.taskId === saveData.taskId ? { ...task, ...saveData } : task
+      ));
+    setItemToEdit(null); 
+    setEditModalVisible(false);
+  };
+
+  // Delete Task Card from List
+  const handleDeleteTask = (taskId) => {
+    Alert.alert('Delete Class', 'Are you sure you want to delete this class?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', 
+        onPress: () => setTasks(prev => prev.filter(task => task.taskId !== taskId)) }
+    ]);
+  };
+
+
+  //=============== End of Task Handlers ================//
+
   //=========== Render Item for Task Cards ===========//
   const renderTaskItem = ({ item }) => {
     const {
@@ -118,14 +151,7 @@ export default function CalendarPage () {
     } = getTaskColors(item.taskType);
 
     return (
-      <View
-        style={[
-          styles.cardWrapper,
-          {
-            borderColor,
-          },
-        ]}
-      >
+      <View style={[styles.cardWrapper, { borderColor }]}>
         <View style={styles.cardHeaderRow}>
           <Text
             style={[styles.cardTitle, { color: '#2C1F17' }]}
@@ -180,8 +206,8 @@ export default function CalendarPage () {
             </Text>
             <Text style={styles.timeValue}>
               {item.taskType === 'Deadline'
-                ? item.timeEnd
-                : `${item.timeStart} - ${item.timeEnd}`}
+                ? item.endTime
+                : `${item.startTime} - ${item.endTime}`}
             </Text>
           </View>
         </View>
@@ -193,7 +219,7 @@ export default function CalendarPage () {
             justifyContent: 'flex-end',
           }}
         >
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => handleOpenEditTask(item)}>
             <FontAwesome5
               name="edit"
               size={16}
@@ -201,7 +227,8 @@ export default function CalendarPage () {
               style={{ marginRight: 16 }}
             />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity
+          onPress={() => handleDeleteTask(item.taskId)}>
             <FontAwesome
               name="trash"
               size={16}
@@ -393,13 +420,22 @@ export default function CalendarPage () {
         </View>
         {/* -------- Render Dynamic Task Cards List ------- */}
         {filteredTasks.map(task => (
-          <View key={task.id}>
+          <View key={task.taskId}>
             {renderTaskItem({ item: task })}
           </View>
         ))}
         {/* -------- End of Dynamic Task Cards List -------- */}
       </ScrollView>
 
+      <EditTaskModal
+        visible={editModalVisible}
+        onClose={()=>{
+          setEditModalVisible(false); 
+          setItemToEdit(null);
+        }} 
+        initial={itemToEdit} //This is passed to the modal (useEffect)
+        onSave={handleSaveTask}
+      />
     </ImageBackground>
   );
 }
