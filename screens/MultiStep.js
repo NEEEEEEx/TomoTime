@@ -81,13 +81,24 @@ export default function MultiStep({ navigation, route}) {
 
   
   const [classes, setClasses] = useState([
-    { id: '1', title: 'IIT415 - Software Engineer', day: 'Tuesday, Thursday', time: '7:30 - 9:00' },
-    { id: '2', title: 'IIT414 - Mob. Prog.', day: 'Saturday', time: '7:30 - 12:30' },
+    { id: '1',  title: 'ITECC',  day: 'Friday',    startTime: '8:00',  endTime: '13:00' },
+    { id: '2',  title: 'ITS406', day: 'Wednesday', startTime: '13:30', endTime: '16:00' },
+    { id: '3',  title: 'ITS406', day: 'Monday',    startTime: '13:30', endTime: '16:00' },
+    { id: '4',  title: 'IIT413', day: 'Monday',    startTime: '16:30', endTime: '19:00' },
+    { id: '5',  title: 'IIT413', day: 'Wednesday', startTime: '16:30', endTime: '19:00' },
+    { id: '6',  title: 'IIT414', day: 'Saturday',  startTime: '7:30',  endTime: '12:30' },
+    { id: '7',  title: 'IIT415', day: 'Tuesday',   startTime: '7:30',  endTime: '9:00' },
+    { id: '8',  title: 'IIT415', day: 'Thursday',  startTime: '7:30',  endTime: '9:00' },
+    { id: '9',  title: 'GEE2',   day: 'Tuesday',   startTime: '13:30', endTime: '15:00' },
+    { id: '10', title: 'ITS405', day: 'Tuesday',   startTime: '17:00', endTime: '19:30' },
+    { id: '11', title: 'GEE2',   day: 'Thursday',  startTime: '13:30', endTime: '15:00' },
+    { id: '12', title: 'ITS405', day: 'Thursday',  startTime: '17:00', endTime: '19:30' },
   ]);
   
   const [freeTime, setFreeTime] = useState([
-    { id: '1', title: 'Monday, Wednesday', time: '7:30 - 9:00' },
-    { id: '2', title: 'Friday', time: '14:00 - 18:00' },
+    { id: '1', title: 'Monday', startTime: '7:30', endTime: '9:00' },
+    { id: '2', title: 'Wednesday', startTime: '7:30', endTime: '9:00' },
+    { id: '3', title: 'Friday', startTime: '14:00', endTime: '18:00' },
   ]);
   //================================================//
 
@@ -108,6 +119,7 @@ export default function MultiStep({ navigation, route}) {
     if (currentPosition < 2) {
       setCurrentPosition(currentPosition + 1);
     } else {
+      
       console.log('Submit Form. Navigate to Main Page')// Handle Form Submission Here
     }
   };
@@ -263,7 +275,7 @@ export default function MultiStep({ navigation, route}) {
           Day: {item.day}
         </Text>
         <Text style={{ color: '#333' }}>
-          Time: {item.time}
+          Time: {item.startTime} - {item.endTime}
         </Text>
       </View>
     </View>
@@ -293,7 +305,9 @@ export default function MultiStep({ navigation, route}) {
          </View>
       </View>
       <View style={{ marginTop: 5 }}>
-        <Text style={{ color: '#333' }}>Time: {item.time}</Text>
+        <Text style={{ color: '#333' }}>
+          Time: {item.startTime} - {item.endTime}
+        </Text>
       </View>
     </View>
   );

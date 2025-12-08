@@ -17,7 +17,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import styles from '../styles/appStyles';
 import { makeChatRequest } from '../utils/openRouter';
-import { addUserMessage, getConversation,  resetConversation } from '../utils/conversationHistory';
+import { addUserMessage, getConversation,  resetConversation, loadConversation } from '../utils/conversationHistory';
 import Bubble from '../components/chat/bubble';
 
 //================== Sample AI Chats ===================//
@@ -64,8 +64,10 @@ export default function ChatAi() {
   const listRef = useRef(null);
 
   useEffect(() => {
-    resetConversation();
-    setConversation([]);
+    (async () => {
+      await loadConversation();
+      setConversation([ ...getConversation()]);
+    })();
   }, []);
 
   // ============= Handle Sending Messages ============= //
@@ -76,7 +78,7 @@ export default function ChatAi() {
 
     try {
       setLoading(true);
-      addUserMessage(messageText)
+      await addUserMessage(messageText)
       setMessageText('');
       setConversation([ ...getConversation() ]);
 
@@ -94,17 +96,23 @@ export default function ChatAi() {
   // ============= End of Handle Sending Messages ============= //
 
   // =============== Handle Reset ================= //
-  const handleReset = () => {
+  const handleReset = async () => {
     setConversation([]);
-    resetConversation();
+    await resetConversation();
+    setConversation([ ...getConversation() ]);
   }
+  // ============ End of Handle Reset ============ //
 
-
+  // ============ Handle Scroll-to-End Animation =========== //
   const scrollToEnd = () => {
     if (listRef.current) {
       listRef.current.scrollToEnd({ animated: true });
     }
   };
+  // ============ End of Handle Scroll-to-End Animation =========== //
+
+
+  const displayable = conversation.filter(c => c.role !== 'system'); // To exclude the system message from the display
 
   //=================== DISPLAY ===================//
   return (
@@ -169,7 +177,7 @@ export default function ChatAi() {
           {/* Chat window */}
           <View style={styles.chatWindow}>
 
-            {!loading && conversation.length === 0 &&
+            {!loading && displayable.length === 0 &&
               <View style={styles.emptyChatWindow}>
                 <FontAwesome5 name='lightbulb' size={35} color='#2e0000' />
                 <Text style={styles.emptyChatWindowText}>Type a Message to get Started!</Text>

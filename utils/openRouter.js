@@ -29,7 +29,7 @@ export const makeChatRequest = async () => {
 
     const text = data?.choices?.[0]?.message?.content ?? '';
 
-    addAssistantMessage(text);
+    await addAssistantMessage(text);
     console.log(getConversation());
     return text;
   } catch (error) {
