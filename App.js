@@ -6,6 +6,7 @@ import Welcome from './screens/Welcome';
 import MultiStep from './screens/MultiStep';
 import CalendarPage from './screens/CalendarPage';
 import ChatAi from './screens/ChatAi';
+import 'react-native-url-polyfill/auto';
 
 // Assuming you are using a library like react-native-dotenv for environment variables
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID } from '@env';

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,16 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import styles from '../styles/appStyles';
+import { makeChatRequest } from '../utils/openRouter';
+import { addUserMessage, getConversation,  resetConversation } from '../utils/conversationHistory';
+import Bubble from '../components/chat/bubble';
 
 //================== Sample AI Chats ===================//
 const initialMessages = [
@@ -54,62 +58,46 @@ const initialMessages = [
 
 export default function ChatAi() {
   const navigation = useNavigation();
-  const [messages, setMessages] = useState(initialMessages);
-  const [inputValue, setInputValue] = useState('');
+  const [conversation, setConversation] = useState([]);
+  const [messageText, setMessageText] = useState('');
+  const [loading, setLoading] = useState(false);
   const listRef = useRef(null);
 
-  // ============= Handle Sending Messages ============= //
-  const handleSend = () => {
-    const trimmed = inputValue.trim();
-    if (!trimmed) return;
+  useEffect(() => {
+    resetConversation();
+    setConversation([]);
+  }, []);
 
-    const newMessage = {
-      id: Date.now().toString(),
-      sender: 'user',
-      text: trimmed,
-    };
-    setMessages(prev => [...prev, newMessage]);
-    setInputValue('');
-  };
+  // ============= Handle Sending Messages ============= //
+  const handleSend = useCallback( async () => {
+    if (messageText === '') return;
+
+    const text = messageText;
+
+    try {
+      setLoading(true);
+      addUserMessage(messageText)
+      setMessageText('');
+      setConversation([ ...getConversation() ]);
+
+      await makeChatRequest();
+    } catch (error) {
+      console.log('Sending Message Failed', error);
+      setMessageText(text); //If error, put the message again in the input box
+    }
+    finally {
+      setConversation([ ...getConversation() ]);
+      setLoading(false);
+    }
+
+  }, [messageText]);
   // ============= End of Handle Sending Messages ============= //
 
-  // ============= Render Messages ============= //
-  const renderMessage = ({ item }) => {
-    const isUser = item.sender === 'user';
-    const isPill = item.variant === 'pill';
-
-    return (
-      <View style={[styles.chatMessageRow, isUser && { justifyContent: 'flex-end' }]}>
-        {!isUser && (
-          <View style={styles.chatAvatarWrap}>
-            <Image
-              source={require('../assests/images/tomo-logo.png')}
-              style={styles.chatAvatar}
-            />
-          </View>
-        )}
-
-        <View
-          style={[
-            styles.chatBubble,
-            isUser ? styles.chatUserBubble : styles.chatBotBubble,
-            isPill && styles.chatPillBubble,
-          ]}
-        >
-          <Text
-            style={[
-              styles.chatBubbleText,
-              isUser ? styles.chatUserText : styles.chatBotText,
-              isPill && styles.chatPillText,
-            ]}
-          >
-            {item.text}
-          </Text>
-        </View>
-      </View>
-    );
-  };
-  // ============= End of Render Messages ============= //
+  // =============== Handle Reset ================= //
+  const handleReset = () => {
+    setConversation([]);
+    resetConversation();
+  }
 
 
   const scrollToEnd = () => {
@@ -147,7 +135,14 @@ export default function ChatAi() {
               <Text style={styles.headerTitle}>Tomo Time</Text>
             </View>
 
-            <LinearGradient
+            <TouchableOpacity onPress={handleReset}>
+              <FontAwesome 
+                name="trash" 
+                size={25} 
+                color="#BE1C1C" 
+              />
+            </TouchableOpacity>
+            {/* <LinearGradient
               colors={['#FF3F41', '#FFBE5B']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -156,7 +151,7 @@ export default function ChatAi() {
               <View style={styles.profileCircle}>
                 <FontAwesome name="user-o" size={18} color="#BE1C1C" />
               </View>
-            </LinearGradient>
+            </LinearGradient> */}
           </View>
 
           {/* Hero */}
@@ -173,11 +168,27 @@ export default function ChatAi() {
 
           {/* Chat window */}
           <View style={styles.chatWindow}>
+
+            {!loading && conversation.length === 0 &&
+              <View style={styles.emptyChatWindow}>
+                <FontAwesome5 name='lightbulb' size={35} color='#2e0000' />
+                <Text style={styles.emptyChatWindowText}>Type a Message to get Started!</Text>
+              </View>
+            }
             <FlatList
               ref={listRef}
-              data={messages}
-              keyExtractor={item => item.id}
-              renderItem={renderMessage}
+              data={conversation}
+              renderItem={(itemData) => {
+                const convoItem = itemData.item;
+                const { role, content } = convoItem;
+
+                if (role === 'system') return null;
+
+                return <Bubble
+                    text={content}
+                    type={role}
+                  />
+              }}
               contentContainerStyle={{ padding: 14, paddingBottom: 80 }}
               showsVerticalScrollIndicator={false}
               onContentSizeChange={scrollToEnd}
@@ -185,12 +196,21 @@ export default function ChatAi() {
             />
           </View>
 
+          { //If there is time, let's add a loading gif 3:33:00 https://www.youtube.com/watch?v=42pSa8BkzWA
+            loading && 
+            <View>
+              <Bubble 
+                text='Loading...'
+              />
+            </View>
+          }
+
           {/* Input */}
           <View style={styles.chatInputRow}>
             <TextInput
-              value={inputValue}
-              onChangeText={setInputValue}
-              placeholder="What would you like to know?"
+              value={messageText}
+              onChangeText={(text) => setMessageText(text)}
+              placeholder="What would you like to do?"
               placeholderTextColor="#b87b3d"
               style={styles.chatInput}
             />
@@ -201,7 +221,7 @@ export default function ChatAi() {
                 end={{ x: 1, y: 0 }}
                 style={styles.chatSendButton}
               >
-                <FontAwesome5 name="arrow-up" size={18} color="#c15b1c" />
+                <FontAwesome5 name="arrow-up" size={18} color="#9c440dff" />
               </LinearGradient>
             </TouchableOpacity>
           </View>
