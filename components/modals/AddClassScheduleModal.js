@@ -13,6 +13,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { SelectList } from 'react-native-dropdown-select-list';
 import styles from '../../styles/modalStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AddClassScheduleModal({visible, onClose, onAdd}) {
   const [title, setTitle] = useState('');
@@ -20,12 +21,21 @@ export default function AddClassScheduleModal({visible, onClose, onAdd}) {
   const [startTime, setStartTime] = useState('00:00');
   const [endTime, setEndTime] = useState('00:00');
 
+    const DAY = {
+      '1': 'Monday',
+      '2': 'Tuesday',
+      '3': 'Wednesday',
+      '4': 'Thursday',
+      '5': 'Friday',
+      '6': 'Saturday',
+      '7': 'Sunday',
+    };
   function handleAdd() {
+    const dayName = DAY[day] || 'Unknown Day';
     const payload = {
       title: title || 'Untitled Class',
-      day: day || new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-      startTime: parseInt(startTime, 10) || 0,
-      endTime: parseInt(endTime, 10) || 0,
+      day: dayName,
+      time: `${startTime}:00 - ${endTime}:00`,
     };
     if (onAdd) onAdd(payload);
     // reset

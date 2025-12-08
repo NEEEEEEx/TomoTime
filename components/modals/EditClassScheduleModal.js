@@ -8,6 +8,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { SelectList } from 'react-native-dropdown-select-list';
@@ -22,7 +23,8 @@ export default function EditClassScheduleModal({visible, onClose, onSave, initia
   useEffect(() => {
     if (initial) {
       setTitle(initial.title ?? '');
-      setDay(initial.day ?? '');
+      const initialDayKey = days.find(d => d.value === initial.day)?.key;
+      setDay(initialDayKey || null);
       setStartTime(initial.startTime ?? '00:00');
       setEndTime(initial.endTime ?? '00:00');
     } else {
@@ -43,11 +45,14 @@ export default function EditClassScheduleModal({visible, onClose, onSave, initia
     {key:'7', value:'Sunday'},
   ];
 
+  const getDayLabel = (key) => days.find(d => d.key === key)?.value;
+
   function handleSave() {
+    const dayLabel = getDayLabel(day) || initial?.day || new Date().toLocaleDateString('en-US', {weekday: 'long'});
     const payload = {
       ...initial,
       title: title || initial?.title || 'Untitled Class',
-      day: day || initial?.day || new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+      day: dayLabel,
       startTime: startTime || initial?.startTime || '00:00',
       endTime: endTime || initial?.endTime || '00:00',
     };
@@ -81,10 +86,10 @@ export default function EditClassScheduleModal({visible, onClose, onSave, initia
             <Text style={styles.label}>Day</Text>
             <SelectList
               data={days}
-              value={day}
               setSelected={setDay}
-              defaultOption={{key: days.find(d=>d.value===day)?.key, value: day}}
-              placeholder={day || 'Select a day...'}
+              save="key"
+              defaultOption={day ? {key: day, value: getDayLabel(day)} : null}
+              placeholder={getDayLabel(day) || 'Select a day...'}
               boxStyles={styles.input}
               inputStyles={{color: '#333'}}
               dropdownTextStyles={{color: '#333'}}

@@ -15,6 +15,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import styles from '../styles/appStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 //================== Sample AI Chats ===================//
 const initialMessages = [

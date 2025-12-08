@@ -6,6 +6,8 @@ import Welcome from './screens/Welcome';
 import MultiStep from './screens/MultiStep';
 import CalendarPage from './screens/CalendarPage';
 import ChatAi from './screens/ChatAi';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 // Assuming you are using a library like react-native-dotenv for environment variables
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID } from '@env';
@@ -29,7 +31,7 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="CalendarPage"
+        initialRouteName="Welcome"
         screenOptions={{
           headerTransparent: true,
           headerShadowVisible: false,

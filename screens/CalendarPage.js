@@ -16,6 +16,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import styles from '../styles/appStyles';
 import EditTaskModal from '../components/modals/EditTaskModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export default function CalendarPage () {
