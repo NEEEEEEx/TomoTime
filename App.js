@@ -4,6 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Welcome from './screens/Welcome';
 import MultiStep from './screens/MultiStep';
+import CalendarPage from './screens/CalendarPage';
+import ChatAi from './screens/ChatAi';
 
 // Import the Provider
 import { AuthProvider } from './context/AuthContext'; 
@@ -46,6 +48,16 @@ const App = () => {
           <Stack.Screen 
             name="MultiStep" 
             component={MultiStep} 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="CalendarPage" 
+            component={CalendarPage} 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="ChatAi" 
+            component={ChatAi} 
             options={{ headerShown: false }}
           />
 

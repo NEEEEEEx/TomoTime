@@ -1,12 +1,14 @@
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
+  //========= CONTAINER STYLES =======//
   container: {
     flex: 1,
     maxWidth: 600,
     width: '100%',
     backgroundColor: '#1C1C1C',
     paddingBottom: 25,
+    fontFamily: 'Quicksand-Regular',
   },
   background: {
     flex: 1,
@@ -73,7 +75,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 40,
-    width: '90%',
     maxWidth: 350,
     elevation: 9,
     borderRadius: 30,
@@ -87,6 +88,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 30,
+    gap: 10,
     width: '100%',
   },
   buttonText: {
@@ -275,6 +277,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FFBE5B',
     backgroundColor: 'white',
+    width: 320,
+    minHeight: 120,
+    alignSelf: 'center',
   },
   
   cardSelected: {
@@ -316,7 +321,186 @@ const styles = StyleSheet.create({
   timeValue: { 
     color: '#2c1f17', 
     fontWeight: '700' 
-  }
+  },
   //=====================================//
+
+  //========= Calendar Styles =======//
+  calendar: {
+    backgroundColor: '#FEFEFE',
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: '#FFBE5B',
+    padding: 15,
+    marginBottom: 16,
+    width: 350,
+    elevation: 7,
+  },
+  //=================================//
+
+  //========== Burger Menu ==========//
+  burgerMenu: {
+    position: 'absolute', // This makes it float
+    top: 60, // Adjust distance from top to align with hamburger
+    left: 5, // Align with left margin
+    backgroundColor: '#b91c1c', // The deep red color
+    borderRadius: 10,
+    paddingVertical: 5,
+    width: 200,
+    elevation: 10,
+    zIndex: 100, // Forces it to be on top of everything else
+  },
+
+  menuItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+  },
+  menuText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+
+  //========= Chat AI Screen: Hero & Chat Layout =========//
+  chatHeroWrap: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    marginTop: 10,
+  },
+  chatHeroImage: {
+    width: 180,
+    height: 180,
+  },
+  chatHeroTitle: {
+    fontSize: 28,
+    color: '#2d0c08',
+    fontFamily: 'Quicksand-Bold',
+    marginTop: -12,
+  },
+  chatHeroSubtitle: {
+    fontSize: 13,
+    color: '#2d0c08',
+    fontFamily: 'Quicksand-SemiBold',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  chatHeroCaption: {
+    fontSize: 12,
+    color: '#a65c26',
+    marginTop: 6,
+    fontFamily: 'Quicksand-Regular',
+  },
+  chatWindow: {
+    flex: 1,
+    marginTop: 10,
+  },
+  //============================================//
+
+  //========= Chat AI Screen: Messages =========//
+  chatMessageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginVertical: 6,
+  },
+  chatAvatarWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  chatAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+  },
+  chatBubble: {
+    maxWidth: '78%',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  chatBotBubble: {
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+  },
+  chatUserBubble: {
+    backgroundColor: '#e48f27',
+    borderTopRightRadius: 4,
+  },
+  chatBubbleText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  chatBotText: {
+    color: '#2d0c08',
+    fontFamily: 'Quicksand-Medium',
+  },
+  chatUserText: {
+    color: '#ffffff',
+    fontFamily: 'Quicksand-Bold',
+  },
+  chatPillBubble: {
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minWidth: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatPillText: {
+    fontSize: 15,
+    fontFamily: 'Quicksand-Bold',
+  },
+  //============================================//
+
+  //========= Chat AI Screen: Input Bar =========//
+  chatInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    paddingTop: 4,
+    backgroundColor: 'transparent',
+  },
+  chatInput: {
+    flex: 1,
+    backgroundColor: '#f8e7d6',
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    color: '#2d0c08',
+    fontFamily: 'Quicksand-Medium',
+    marginRight: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 3,
+  },
+  chatSendButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  //============================================//
 });
 export default styles;
