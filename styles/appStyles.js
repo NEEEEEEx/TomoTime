@@ -290,6 +290,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center' ,
+    width: '100%',
   },
 
   cardTitle: { 
@@ -297,6 +298,7 @@ const styles = StyleSheet.create({
     fontWeight: '700', 
     color: '#FFBE5B',
     fontFamily: 'Quicksand-Bold',
+    width: '80%',
   },
 
   rightIcons: { 

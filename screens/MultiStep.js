@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -26,9 +26,20 @@ import {
   saveFreeTime,
   getSemesterPreferences,
   getClassSchedule,
-  getFreeTime
+  getFreeTime,
+  saveSemesters,
+  getSemesters,
+  saveSelectedSemester,
+  getSelectedSemester,
+  saveClassScheduleForSemester,
+  saveFreeTimeForSemester,
+  getClassScheduleForSemester,
+  getFreeTimeForSemester,
+  updateStepValidation,
+  getMultiStepValidation
 } from '../utils/userPreferences';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AuthContext } from '../context/AuthContext';
 
 
 //========= ASYNC STORAGE KEYS ===========//
@@ -91,8 +102,15 @@ export default function MultiStep({ navigation, route}) {
   const [editModalVisible, setEditModalVisible] = useState(false); // Edit Item Modal Visibility
   const [itemToEdit, setItemToEdit] = useState(null); // currently editing item
   const [loading, setLoading] = useState(true);
+  const [stepValidation, setStepValidation] = useState({
+    step0Complete: false,
+    step1Complete: false,
+    step2Complete: false
+  });
   // =================================== //
   
+  // Get AuthContext
+  const { completeMultiStep } = useContext(AuthContext);
   
   //================================================//
 
@@ -156,10 +174,37 @@ export default function MultiStep({ navigation, route}) {
       { id: '2', title: 'Wednesday', startTime: '7:30', endTime: '9:00' },
       { id: '3', title: 'Friday', startTime: '14:00', endTime: '18:00' },
     ];
-    //get the placeholder data and display them
-    setSemesters(await getData(SEMESTERS_KEY, sampleSemesters));
-    setClasses(await getData(CLASSES_KEY, sampleClasses));
-    setFreeTime(await getData(FREE_TIME_KEY, sampleFreeTime));
+    
+    // Load validation state
+    const validation = await getMultiStepValidation();
+    setStepValidation(validation);
+    
+    // Load semesters from new storage system
+    const savedSemesters = await getSemesters();
+    if (savedSemesters && savedSemesters.length > 0) {
+      setSemesters(savedSemesters);
+      
+      // Load classes and free time for selected semester
+      const selectedSemester = savedSemesters.find(s => s.selected);
+      if (selectedSemester) {
+        const semesterClasses = await getClassScheduleForSemester(selectedSemester.id);
+        const semesterFreeTime = await getFreeTimeForSemester(selectedSemester.id);
+        
+        if (semesterClasses.length > 0) setClasses(semesterClasses);
+        else setClasses(await getData(CLASSES_KEY, sampleClasses));
+        
+        if (semesterFreeTime.length > 0) setFreeTime(semesterFreeTime);
+        else setFreeTime(await getData(FREE_TIME_KEY, sampleFreeTime));
+      } else {
+        setClasses(await getData(CLASSES_KEY, sampleClasses));
+        setFreeTime(await getData(FREE_TIME_KEY, sampleFreeTime));
+      }
+    } else {
+      // Use sample data if no semesters exist
+      setSemesters(await getData(SEMESTERS_KEY, sampleSemesters));
+      setClasses(await getData(CLASSES_KEY, sampleClasses));
+      setFreeTime(await getData(FREE_TIME_KEY, sampleFreeTime));
+    }
 
     setLoading(false);
   };
@@ -171,6 +216,15 @@ export default function MultiStep({ navigation, route}) {
     if (!loading)
     {
       storeData(SEMESTERS_KEY, semesters);
+      saveSemesters(semesters);
+      
+      // Update step 0 validation if a semester is selected
+      const hasSelectedSemester = semesters.some(s => s.selected);
+      if (hasSelectedSemester && !stepValidation.step0Complete) {
+        updateStepValidation(0, true).then(validation => {
+          if (validation) setStepValidation(validation);
+        });
+      }
     }
 
   }, [semesters, loading]);
@@ -179,7 +233,19 @@ export default function MultiStep({ navigation, route}) {
   useEffect(() => {
     if (!loading) {
       storeData(CLASSES_KEY, classes);
-
+      
+      // Save to selected semester
+      const selectedSemester = semesters.find(s => s.selected);
+      if (selectedSemester) {
+        saveClassScheduleForSemester(selectedSemester.id, classes);
+        
+        // Update step 1 validation if classes exist
+        if (classes.length > 0 && !stepValidation.step1Complete) {
+          updateStepValidation(1, true).then(validation => {
+            if (validation) setStepValidation(validation);
+          });
+        }
+      }
     }
   }, [classes, loading]);
   
@@ -187,7 +253,19 @@ export default function MultiStep({ navigation, route}) {
   useEffect(() => {
     if (!loading) {
       storeData(FREE_TIME_KEY, freeTime);
-
+      
+      // Save to selected semester
+      const selectedSemester = semesters.find(s => s.selected);
+      if (selectedSemester) {
+        saveFreeTimeForSemester(selectedSemester.id, freeTime);
+        
+        // Update step 2 validation if free time exists
+        if (freeTime.length > 0 && !stepValidation.step2Complete) {
+          updateStepValidation(2, true).then(validation => {
+            if (validation) setStepValidation(validation);
+          });
+        }
+      }
     }
   }, [freeTime, loading]);
   //===========End of async storage funcs==========//
@@ -244,15 +322,56 @@ export default function MultiStep({ navigation, route}) {
   //================================================//
   
   //============ Steps Navigation ============//
-  const goNext = () => {
+  const goNext = async () => {
+    // Validation for Step 0 (Semester)
+    if (currentPosition === 0) {
+      const hasSelectedSemester = semesters.some(s => s.selected);
+      if (!hasSelectedSemester) {
+        Alert.alert(
+          'Semester Required',
+          'Please create and select a semester before proceeding.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+    }
+    
+    // Validation for Step 1 (Classes)
+    if (currentPosition === 1) {
+      if (classes.length === 0) {
+        Alert.alert(
+          'Class Schedule Required',
+          'Please add at least one class to your schedule before proceeding.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+    }
+    
+    // Validation for Step 2 (Free Time)
+    if (currentPosition === 2) {
+      if (freeTime.length === 0) {
+        Alert.alert(
+          'Free Time Required',
+          'Please add at least one free time slot before proceeding.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+      
+      // All steps complete - mark MultiStep as done and navigate
+      console.log('All steps complete! Navigating to CalendarPage');
+      await completeMultiStep();
+      navigation.replace('CalendarPage');
+      return;
+    }
+    
+    // Move to next step
     if (currentPosition < 2) {
       setCurrentPosition(currentPosition + 1);
-    } else {
-      
-      console.log('Submit Form. Navigate to Main Page')// Handle Form Submission Here
-      navigation.replace('CalendarPage');
     }
   };
+  
   const goBack = () => {
     if (currentPosition > 0) {
       setCurrentPosition(currentPosition - 1);
@@ -262,10 +381,20 @@ export default function MultiStep({ navigation, route}) {
 
   // =========== Handlers for Selecting and Adding Items ============ //
   //============ Semester Handlers
-  const handleSelectSemester = (id) => { 
+  const handleSelectSemester = async (id) => { 
     setSemesters(prev => 
-    prev.map(sem => ({ ...sem, selected: sem.id === id })) 
-    ); 
+      prev.map(sem => ({ ...sem, selected: sem.id === id })) 
+    );
+    
+    // Save selected semester
+    await saveSelectedSemester(id);
+    
+    // Load classes and free time for this semester
+    const semesterClasses = await getClassScheduleForSemester(id);
+    const semesterFreeTime = await getFreeTimeForSemester(id);
+    
+    setClasses(semesterClasses);
+    setFreeTime(semesterFreeTime);
   };
 
   const handleAddSemester = (payload) => {
