@@ -27,9 +27,9 @@ export default function Welcome ()  {
     try {
       await GoogleSignin.hasPlayServices(); 
       const userDetails = await GoogleSignin.signIn(); 
-      setUserInfo(userDetails);
 
-      if (userDetails.type === 'success') {
+      if (userDetails && userDetails.type === 'success') {
+        setUserInfo(userDetails);
         // Use AuthContext signIn method
         await signIn(userDetails.data.user);
         
@@ -43,12 +43,13 @@ export default function Welcome ()  {
             }
           ]
         );
-      } else {
+      } else if (userDetails) {
         Alert.alert('Sign in failed', `Unexpected response type: ${userDetails.type}`);
       }
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        Alert.alert('Sign-In Cancelled', 'User cancelled the sign-in flow');
+        // User cancelled - just log it, no alert needed
+        console.log('User cancelled the sign-in flow');
       } else if (error.code === statusCodes.IN_PROGRESS) {
         Alert.alert('Sign-In In Progress', 'Sign in is already in progress');
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {

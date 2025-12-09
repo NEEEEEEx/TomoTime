@@ -6,6 +6,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 // Storage keys
 const USER_KEY = '@TomoTime:user';
 const MULTISTEP_COMPLETE_KEY = '@TomoTime:multistep_complete';
+const NAVIGATION_STATE_KEY = '@TomoTime:navigation_state';
 
 // 1. Create the Context
 export const AuthContext = createContext();
@@ -25,13 +26,13 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoading(true);
       
-      // Check if user is signed in
-      const isSignedIn = await GoogleSignin.isSignedIn();
+      // Check AsyncStorage for user data instead of using GoogleSignin
+      const isSignedIn = await AsyncStorage.getItem(USER_KEY);
       
       if (isSignedIn) {
-        // Get current user info
-        const userInfo = await GoogleSignin.signInSilently();
-        setUser(userInfo.data.user);
+        // User data exists in storage
+        const userData = JSON.parse(isSignedIn);
+        setUser(userData);
         
         // Check if MultiStep is complete
         const multiStepStatus = await AsyncStorage.getItem(MULTISTEP_COMPLETE_KEY);
@@ -61,6 +62,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await GoogleSignin.signOut();
       await AsyncStorage.removeItem(USER_KEY);
+      await AsyncStorage.removeItem(NAVIGATION_STATE_KEY);
       setUser(null);
       setIsMultiStepComplete(false);
     } catch (error) {

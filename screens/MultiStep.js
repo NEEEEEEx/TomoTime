@@ -90,13 +90,11 @@ const stepsIndicatorStyles = {
 
 export default function MultiStep({ navigation, route}) {
 
-   //=============== USE STATES FOR INITIALIZATION ======//
+  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
+  const { signOut } = useContext(AuthContext);
   const [semesters, setSemesters] = useState([]); //initialize as empty arrays
   const [classes, setClasses] = useState([]);
-  const [freeTime, setFreeTime] =useState([]);
-
-  //=============================================//
-  // =========== Use States ============ //
+  const [freeTime, setFreeTime] = useState([]);
   const [currentPosition, setCurrentPosition] = useState(0);// Step Indicator Posistion
   const [addModalVisible, setAddModalVisible] = useState(false); // Add New Item Modal Visibility
   const [editModalVisible, setEditModalVisible] = useState(false); // Edit Item Modal Visibility
@@ -107,13 +105,38 @@ export default function MultiStep({ navigation, route}) {
     step1Complete: false,
     step2Complete: false
   });
-  // =================================== //
-  
-  // Get AuthContext
   const { completeMultiStep } = useContext(AuthContext);
-  
-  //================================================//
 
+  //=========== Profile Menu ============//
+    const toggleProfileMenu = () => {
+      setProfileMenuVisible(!profileMenuVisible);
+    }
+  
+    const handleLogout = async () => {
+      setProfileMenuVisible(false);
+      Alert.alert(
+        'Log Out',
+        'Are you sure you want to log out?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          },
+          {
+            text: 'Log Out',
+            onPress: async () => {
+              await signOut();
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Welcome' }],
+              });
+            },
+            style: 'destructive'
+          }
+        ]
+      );
+    }
+    //===================================//
  
 
   //====== ASYNC STORAGE FUNCS -======//
@@ -628,7 +651,7 @@ export default function MultiStep({ navigation, route}) {
         </View>
 
         {/* ----- Profile Circle ----- */}
-        <TouchableOpacity>
+        <TouchableOpacity onPress={toggleProfileMenu}>
           <LinearGradient
             colors={['#FF5F6D', '#FFC371']} // Your gradient colors
             start={{ x: 0, y: 1 }}
@@ -639,6 +662,16 @@ export default function MultiStep({ navigation, route}) {
           </LinearGradient>  
         </TouchableOpacity>
         {/* ----- End of Profile Circle ----- */}
+
+        {profileMenuVisible && (
+          <View style={styles.profileMenu}>
+            <TouchableOpacity 
+              style={styles.menuItem}
+              onPress={handleLogout}>
+              <Text style={styles.menuText}>Log out</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
       {/* -------- End of Header -------- */}
 

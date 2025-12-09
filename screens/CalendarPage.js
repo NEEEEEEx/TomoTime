@@ -16,17 +16,19 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import styles from '../styles/appStyles';
 import { TaskContext } from '../context/TaskContext';
+import { AuthContext } from '../context/AuthContext';
 import EditTaskModal from '../components/modals/EditTaskModal';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export default function CalendarPage () {
   const navigation = useNavigation();
   const { tasks, loadTasks, updateTask, deleteTask } = useContext(TaskContext);
+  const { signOut } = useContext(AuthContext);
   const [selectedDate, setSelectedDate] = useState('');
-  const [menuVisible, setMenuVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [itemToEdit, setItemToEdit] = useState(null);
+  const [burgerMenuVisible, setBurgerMenuVisible] = useState(false);
+  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
 
   // Load tasks on component mount
   useEffect(() => {
@@ -49,14 +51,45 @@ export default function CalendarPage () {
   }, [navigation, loadTasks]);
 
   //=========== Burger Menu ============//
-  const toggleMenu = () => {
-    setMenuVisible(!menuVisible);
+  const toggleBurgerMenu = () => {
+    setBurgerMenuVisible(!burgerMenuVisible);
   }
 
   const handleMenuItemPress = (screen, stepIdx) => {
-    setMenuVisible(false);
+    setBurgerMenuVisible(false);
 
     navigation.navigate(screen, {initialStep: stepIdx});
+  }
+  //===================================//
+
+  //=========== Profile Menu ============//
+  const toggleProfileMenu = () => {
+    setProfileMenuVisible(!profileMenuVisible);
+  }
+
+  const handleLogout = async () => {
+    setProfileMenuVisible(false);
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Log Out',
+          onPress: async () => {
+            await signOut();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Welcome' }],
+            });
+          },
+          style: 'destructive'
+        }
+      ]
+    );
   }
   //===================================//
 
@@ -311,13 +344,13 @@ export default function CalendarPage () {
           {/* ----- App Header (menu, title, profile) ----- */}
           <View style={styles.headerRow}>
             <View style={styles.leftHeader}>
-              <TouchableOpacity onPress={toggleMenu}>
+              <TouchableOpacity onPress={toggleBurgerMenu}>
                 <FontAwesome5 name="bars" size={22} color="#461F04" />
               </TouchableOpacity>
             </View>
 
             {/* -------- Burger Menu Dropdown -------- */}
-            {menuVisible && (
+            {burgerMenuVisible && (
               <View style={styles.burgerMenu}>
                 <TouchableOpacity 
                   style={[styles.menuItem,{
@@ -327,7 +360,6 @@ export default function CalendarPage () {
                   onPress={() => handleMenuItemPress('MultiStep', 0)}>
                   <Text style={styles.menuText}>Semester</Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity 
                   style={[styles.menuItem,{
                     borderBottomWidth: 1,
@@ -343,22 +375,34 @@ export default function CalendarPage () {
                   <Text style={styles.menuText}>Free Time</Text>
                 </TouchableOpacity>
               </View>
+              
             )}
 
             <View style={styles.titleWrap}>
               <Text style={styles.headerTitle}>Tomo Time</Text>
             </View>
-
-            <LinearGradient
-              colors={['#FF3F41', '#FFBE5B']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradientContainer}
-            >
-              <View style={styles.profileCircle}>
-                <FontAwesome5 name="user-alt" size={18} color="#BE1C1C" />
+            
+            <TouchableOpacity onPress={toggleProfileMenu}>
+              <LinearGradient
+                colors={['#FF5F6D', '#FFC371']} // Your gradient colors
+                start={{ x: 0, y: 1 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.gradientContainer}
+              >
+                  <Image source={require('../assests/images/default-profile.jpg')} style={styles.profileCircle} />
+              </LinearGradient>  
+            </TouchableOpacity>
+            
+            {/* ---------- Profile Menu Dropdown ---------- */}
+            {profileMenuVisible && (
+              <View style={styles.profileMenu}>
+                <TouchableOpacity 
+                  style={styles.menuItem}
+                  onPress={handleLogout}>
+                  <Text style={styles.menuText}>Log out</Text>
+                </TouchableOpacity>
               </View>
-            </LinearGradient>
+            )}
           </View>
 
           <View style={{ alignItems: 'center' }}>

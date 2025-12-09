@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect, useContext, useRef, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -26,11 +26,37 @@ const configureGoogleSignIn = () => {
 
 const Stack = createNativeStackNavigator();
 
+const NAVIGATION_STATE_KEY = '@TomoTime:navigation_state';
+
 // Navigation component that has access to AuthContext
 const AppNavigator = () => {
   const { user, isMultiStepComplete, isLoading } = useContext(AuthContext);
+  const [isNavigationReady, setIsNavigationReady] = useState(false);
+  const [initialState, setInitialState] = useState();
 
-  if (isLoading) {
+  // Load persisted navigation state
+  useEffect(() => {
+    const restoreState = async () => {
+      try {
+        const savedStateString = await AsyncStorage.getItem(NAVIGATION_STATE_KEY);
+        const state = savedStateString ? JSON.parse(savedStateString) : undefined;
+
+        if (state !== undefined) {
+          setInitialState(state);
+        }
+      } catch (e) {
+        console.error('Failed to restore navigation state:', e);
+      } finally {
+        setIsNavigationReady(true);
+      }
+    };
+
+    if (!isLoading) {
+      restoreState();
+    }
+  }, [isLoading]);
+
+  if (isLoading || !isNavigationReady) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF9F0' }}>
         <ActivityIndicator size="large" color="#FF3F41" />
@@ -40,23 +66,29 @@ const AppNavigator = () => {
   }
 
   // Determine initial route based on auth state
-  let initialRoute = 'Welcome';
+  let initialRouteName = 'Welcome';
   
   if (user) {
     // User is signed in
     if (isMultiStepComplete) {
       // User has completed setup, go to main app
-      initialRoute = 'CalendarPage';
+      initialRouteName = 'CalendarPage';
     } else {
       // User needs to complete setup
-      initialRoute = 'MultiStep';
+      initialRouteName = 'MultiStep';
     }
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      initialState={initialState}
+      onStateChange={(state) => {
+        // Save navigation state to AsyncStorage whenever it changes
+        AsyncStorage.setItem(NAVIGATION_STATE_KEY, JSON.stringify(state));
+      }}
+    >
       <Stack.Navigator
-        initialRouteName={initialRoute}
+        initialRouteName={initialRouteName}
         screenOptions={{
           headerTransparent: true,
           headerShadowVisible: false,

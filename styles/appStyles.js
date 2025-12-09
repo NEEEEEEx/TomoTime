@@ -362,6 +362,20 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
+  //=================================//
+
+  //========== Profile Menu ==========//
+  profileMenu: {
+    position: 'absolute', // This makes it float
+    top: 60, // Adjust distance from top to align with profile icon
+    right: 5, // Align with right margin
+    backgroundColor: '#b91c1c', // The deep red color
+    borderRadius: 10,
+    paddingVertical: 5,
+    width: 150,
+    elevation: 10,
+    zIndex: 100, // Forces it to be on top of everything else
+  },
 
   //========= Chat AI Screen: Hero & Chat Layout =========//
   chatHeroWrap: {
