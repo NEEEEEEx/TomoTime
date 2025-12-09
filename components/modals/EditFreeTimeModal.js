@@ -17,15 +17,50 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function EditFreeTimeModal({visible, onClose, onSave, initial}) {
   const [day, setDay] = useState('');
-  const [time, setTime] = useState('');
+  const [startTime, setStartTime] = useState('00:00');
+  const [endTime, setEndTime] = useState('00:00');
+
+        const formatTime = (text) => {
+      const dataCleaning = text.replace(/[^\d]/g, '');
+
+      if (dataCleaning.length === 4) {
+        const hours = dataCleaning.substring(0, 2);
+        const minutes = dataCleaning.substring(2, 4);
+
+        const validHours = Math.min(23, parseInt(hours, 10)).toString().padStart(2, '0');
+        const validMinutes = Math.min(59, parseInt(minutes, 10)).toString().padStart(2, '0');
+        return `${validHours}:${validMinutes}`;
+      }
+      //return default 00:00
+      return text.length > 0 ? text : '00:00';
+    };
+
+      const handleStartTimeChange = (text) => {
+      setStartTime(text);
+
+    };
+
+    const handleEndTimeChange = (text) => {
+      setEndTime(text);
+    }
 
   useEffect(() => {
     if (initial) {
-      setDay(initial.day ?? '');
-      setTime(initial.time ?? '');
+      setDay(initial.days ?? '');
+      
+      if (initial.time){
+        const [start, end] = initial.time.split (' - ');
+        setStartTime(start?.trim() ?? '00:00');
+        setEndTime(end?.trim() ?? '00:00');
+      } else {
+        setStartTime('00:00');
+        setEndTime('00:00');
+      }
+
     } else {
       setDay('');
-      setTime('');
+      setStartTime('00:00');
+      setEndTime('00:00');
     }
   }, [initial, visible]);
 
@@ -39,11 +74,22 @@ export default function EditFreeTimeModal({visible, onClose, onSave, initial}) {
     {key:'7', value:'Sunday'},
   ];
 
+    const getDayName = (keyOrName) => {
+      let dayObject = days.find(d => d.key === keyOrName);
+      if(!dayObject) {
+        dayObject = days.find(d => d.value === keyOrName);
+      }
+      return dayObject?.value;
+    }
   function handleSave() {
+    const dayName = getDayName(day) || initial?.day || new Date().toLocalDateString('en-US', {weekday: 'long'});
+    const formattedStartTime = formatTime(startTime);
+    const formattedEndTime = formatTime(endTime);
+
     const payload = {
       ...initial,
-      day: day || initial?.day || new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-      time: time || initial?.time || '',
+      day: dayName,
+      time: `${formattedStartTime} - ${formattedEndTime}`,
     };
     if (onSave) onSave(payload);
     onClose();
@@ -75,14 +121,30 @@ export default function EditFreeTimeModal({visible, onClose, onSave, initial}) {
               dropdownTextStyles={{color: '#333'}}
             />
 
-            <Text style={styles.label}>Time</Text>
-            <TextInput
-              value={time}
-              onChangeText={setTime}
-              placeholder="e.g. 14:00 - 18:00"
-              style={styles.input}
-              placeholderTextColor="#bfbfbf"
-            />
+            <View style={styles.rowInputs}>
+              <View style={styles.smallInputWrap}>
+                <Text style={styles.smallLabel}>Start Time </Text>
+                <TextInput
+                  value={startTime}
+                  onChangeText={handleStartTimeChange}
+                  keyboardType="numeric"
+                  style={styles.smallInput}
+                  maxLength={5}
+                  onBlur={() => setStartTime(formatTime(startTime))}
+                />
+              </View>
+              <View style={styles.smallInputWrap}>
+                <Text style={styles.smallLabel}>End Time</Text>
+                <TextInput
+                  value={endTime}
+                  onChangeText={handleEndTimeChange}
+                  keyboardType="numeric"
+                  style={styles.smallInput}
+                  maxLength={5}
+                  onBlur={() => setEndTime(formatTime(endTime))}
+                />
+              </View>
+            </View>
 
             <TouchableOpacity activeOpacity={0.9} onPress={handleSave} style={styles.addBtnWrap}>
               <LinearGradient colors={["#FF5A4A", "#FFB84E"]} style={styles.addBtn} start={{x:0,y:0}} end={{x:1,y:0}}>

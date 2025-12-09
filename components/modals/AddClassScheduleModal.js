@@ -43,7 +43,7 @@ export default function AddClassScheduleModal({visible, onClose, onAdd}) {
         return `${validHours}:${validMinutes}`;
       }
       //return default 00:00
-      return text;
+      return text.length > 0 ? text : '00:00';
     };
 
     const handleStartTimeChange = (text) => {
@@ -146,7 +146,7 @@ export default function AddClassScheduleModal({visible, onClose, onAdd}) {
               </View>
             </View>
 
-            <TouchableOpacity activeOpacity={0.9} onPress={handleAdd} style={styles.addBtnWrap}>
+            <TouchableOpacity activeOpacity={0} onPress={handleAdd} style={styles.addBtnWrap}>
               <LinearGradient colors={["#FF5A4A", "#FFB84E"]} style={styles.addBtn} start={{x:0,y:0}} end={{x:1,y:0}}>
                 <Text style={styles.addBtnText}>Add Class</Text>
               </LinearGradient>
@@ -158,3 +158,4 @@ export default function AddClassScheduleModal({visible, onClose, onAdd}) {
   );
 }
 
+.9

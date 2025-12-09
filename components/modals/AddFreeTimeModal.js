@@ -54,6 +54,7 @@ export default function AddFreeTimeModal({visible, onClose, onAdd}) {
       setEndTime(text);
     }
 
+    //Wag galawin please. Nawawala yung display
   function handleAdd() {
     const dayName = DAY[day] || 'Unknown Day';
     const formattedStartTime = formatTime(startTime);

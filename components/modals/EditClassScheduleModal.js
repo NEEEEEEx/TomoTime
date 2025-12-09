@@ -25,8 +25,15 @@ export default function EditClassScheduleModal({visible, onClose, onSave, initia
       setTitle(initial.title ?? '');
       const initialDayKey = days.find(d => d.value === initial.day)?.key;
       setDay(initialDayKey || null);
-      setStartTime(initial.startTime ?? '00:00');
-      setEndTime(initial.endTime ?? '00:00');
+
+      if (initial.time){
+        const [start, end] = initial.time.split (' - ');
+        setStartTime(start?.trim() ?? '00:00');
+        setEndTime(end?.trim() ?? '00:00');
+      } else {
+        startTime('00:00');
+        setEndTime('00:00');
+      }
     } else {
       setTitle('');
       setDay('');
@@ -45,16 +52,41 @@ export default function EditClassScheduleModal({visible, onClose, onSave, initia
     {key:'7', value:'Sunday'},
   ];
 
+      const formatTime = (text) => {
+      const dataCleaning = text.replace(/[^\d]/g, '');
+
+      if (dataCleaning.length === 4) {
+        const hours = dataCleaning.substring(0, 2);
+        const minutes = dataCleaning.substring(2, 4);
+
+        const validHours = Math.min(23, parseInt(hours, 10)).toString().padStart(2, '0');
+        const validMinutes = Math.min(59, parseInt(minutes, 10)).toString().padStart(2, '0');
+        return `${validHours}:${validMinutes}`;
+      }
+      //return default 00:00
+      return text.length > 0 ? text : '00:00';
+    };
+
+    const handleStartTimeChange = (text) => {
+      setStartTime(text);
+
+    };
+
+    const handleEndTimeChange = (text) => {
+      setEndTime(text);
+    }
+
   const getDayLabel = (key) => days.find(d => d.key === key)?.value;
 
   function handleSave() {
-    const dayLabel = getDayLabel(day) || initial?.day || new Date().toLocaleDateString('en-US', {weekday: 'long'});
+    const dayName = DAY[day] || 'Unknown Day';
+    const formattedStartTime = formatTime(startTime);
+    const formattedEndTime = formatTime(endTime);
     const payload = {
       ...initial,
       title: title || initial?.title || 'Untitled Class',
-      day: dayLabel,
-      startTime: startTime || initial?.startTime || '00:00',
-      endTime: endTime || initial?.endTime || '00:00',
+      day: dayName,
+      time: `${formattedStartTime} - ${formattedEndTime}`,
     };
     if (onSave) onSave(payload);
     onClose();
@@ -100,18 +132,22 @@ export default function EditClassScheduleModal({visible, onClose, onSave, initia
                 <Text style={styles.smallLabel}>Start Time </Text>
                 <TextInput
                   value={startTime}
-                  onChangeText={setStartTime}
+                  onChangeText={handleStartTimeChange}
                   keyboardType="numeric"
                   style={styles.smallInput}
+                  maxLength={5}
+                  onBlur={() => setStartTime(formatTime(startTime))}
                 />
               </View>
               <View style={styles.smallInputWrap}>
                 <Text style={styles.smallLabel}>End Time</Text>
                 <TextInput
                   value={endTime}
-                  onChangeText={setEndTime}
+                  onChangeText={handleEndTimeChange}
                   keyboardType="numeric"
                   style={styles.smallInput}
+                  maxLength={5}
+                  onBlur={() => setEndTime(formatTime(endTime))}
                 />
               </View>
             </View>
