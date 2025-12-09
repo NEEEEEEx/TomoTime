@@ -19,6 +19,7 @@ import styles from '../styles/appStyles';
 import { makeChatRequest } from '../utils/openRouter';
 import { addUserMessage, getConversation,  resetConversation, loadConversation } from '../utils/conversationHistory';
 import Bubble from '../components/chat/bubble';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 //================== Sample AI Chats ===================//
 const initialMessages = [

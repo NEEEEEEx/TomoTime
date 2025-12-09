@@ -9,6 +9,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
 import { SelectList } from 'react-native-dropdown-select-list';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -19,11 +20,20 @@ export default function AddFreeTimeModal({visible, onClose, onAdd}) {
   const [startTime, setStartTime] = useState('00:00');
   const [endTime, setEndTime] = useState('00:00');
 
+  const DAY = {
+      '1': 'Monday',
+      '2': 'Tuesday',
+      '3': 'Wednesday',
+      '4': 'Thursday',
+      '5': 'Friday',
+      '6': 'Saturday',
+      '7': 'Sunday',
+    };
   function handleAdd() {
+    const dayName = DAY[day] || 'Unknown Day';
     const payload = {
-      day: day || new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-      startTime: parseInt(startTime, 10) || 0,
-      endTime: parseInt(endTime, 10) || 0,
+      title: dayName,
+      time: `${startTime}:00 - ${endTime}:00`,
     };
     if (onAdd) onAdd(payload);
     // reset
