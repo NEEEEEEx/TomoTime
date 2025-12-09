@@ -8,6 +8,7 @@ import {
   FlatList,
   TextInput,
   Alert,
+  Modal, // Added Modal to imports
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -20,6 +21,7 @@ import AddFreeTimeModal from '../components/modals/AddFreeTimeModal';
 import EditSemesterModal from '../components/modals/EditSemesterModal';
 import EditClassScheduleModal from '../components/modals/EditClassScheduleModal';
 import EditFreeTimeModal from '../components/modals/EditFreeTimeModal';
+import ScheduleImporter from '../components/ScheduleImporter'; // Added ScheduleImporter import
 
 
 //========= STEP  INDICATOR ==========//
@@ -70,6 +72,7 @@ export default function MultiStep({ navigation, route}) {
   const [addModalVisible, setAddModalVisible] = useState(false); // Add New Item Modal Visibility
   const [editModalVisible, setEditModalVisible] = useState(false); // Edit Item Modal Visibility
   const [itemToEdit, setItemToEdit] = useState(null); // currently editing item
+  const [importModalVisible, setImportModalVisible] = useState(false); // State for AI Importer Modal
   // =================================== //
   
   //=========== Sample Data for Each Step ===========//
@@ -119,6 +122,29 @@ export default function MultiStep({ navigation, route}) {
   //=========================================//
 
   // =========== Handlers for Selecting and Adding Items ============ //
+  
+  // Handler for AI Importer Success
+  const handleAIImportSuccess = (parsedData) => {
+    // 1. Transform AI data format to App data format
+    // AI returns: { title: "Math", day: "Monday", start_time: "09:00", end_time: "10:30" }
+    // App wants: { id: "...", title: "Math", day: "Monday", time: "09:00 - 10:30" }
+    
+    const newClasses = parsedData.map((item, index) => ({
+      id: (Date.now() + index).toString(), // Generate unique ID
+      title: item.title,
+      day: item.day,
+      time: `${item.start_time} - ${item.end_time}` // Combine times string
+    }));
+
+    // 2. Add to existing classes state
+    setClasses(prev => [...newClasses, ...prev]);
+
+    // 3. Close Modal and Notify
+    setImportModalVisible(false);
+    // Optional: Alert.alert("Success", `${newClasses.length} classes imported successfully!`);
+  };
+
+
   //============ Semester Handlers
   const handleSelectSemester = (id) => { 
     setSemesters(prev => 
@@ -388,6 +414,17 @@ export default function MultiStep({ navigation, route}) {
             </TouchableOpacity>
           )}
 
+          {/* === ADDED: SCAN BUTTON FOR STEP 2 === */}
+          {currentPosition === 1 && (
+            <TouchableOpacity 
+              style={[styles.addButton, { backgroundColor: '#4A90E2', marginRight: 10 }]} 
+              onPress={() => setImportModalVisible(true)}
+            > 
+              <FontAwesome name="camera" size={18} color="#fff" />
+              <Text style={styles.addText}> Scan</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity style={styles.addButton} onPress={()=>setAddModalVisible(true)}> 
             <FontAwesome 
               name="plus" 
@@ -470,6 +507,22 @@ export default function MultiStep({ navigation, route}) {
           onSave={handleSaveFreeTime}
       />}
       {/* -------- End of Edit Modal -------- */}
+
+      {/* === ADDED: AI SCHEDULE IMPORTER MODAL === */}
+      <Modal
+        visible={importModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setImportModalVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center' }}>
+          <ScheduleImporter 
+            onImportSuccess={handleAIImportSuccess}
+            onClose={() => setImportModalVisible(false)}
+          />
+        </View>
+      </Modal>
+
     </ImageBackground>
   );
 }
