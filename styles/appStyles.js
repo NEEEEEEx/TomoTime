@@ -290,6 +290,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center' ,
+    width: '100%',
   },
 
   cardTitle: { 
@@ -297,6 +298,7 @@ const styles = StyleSheet.create({
     fontWeight: '700', 
     color: '#FFBE5B',
     fontFamily: 'Quicksand-Bold',
+    width: '80%',
   },
 
   rightIcons: { 
@@ -359,6 +361,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
+  },
+  //=================================//
+
+  //========== Profile Menu ==========//
+  profileMenu: {
+    position: 'absolute', // This makes it float
+    top: 60, // Adjust distance from top to align with profile icon
+    right: 5, // Align with right margin
+    backgroundColor: '#b91c1c', // The deep red color
+    borderRadius: 10,
+    paddingVertical: 5,
+    width: 150,
+    elevation: 10,
+    zIndex: 100, // Forces it to be on top of everything else
   },
 
   //========= Chat AI Screen: Hero & Chat Layout =========//

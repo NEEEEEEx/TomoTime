@@ -11,21 +11,40 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { SelectList } from 'react-native-dropdown-select-list';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import styles from '../../styles/modalStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export default function EditFreeTimeModal({visible, onClose, onSave, initial}) {
   const [day, setDay] = useState('');
-  const [time, setTime] = useState('');
+  const [startTime, setStartTime] = useState(new Date());
+  const [endTime, setEndTime] = useState(new Date());
+
+  const parseTimeString = (timeString) => {
+    if (!timeString) return new Date();
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours || 0, minutes || 0, 0, 0);
+    return date;
+  };
 
   useEffect(() => {
     if (initial) {
-      setDay(initial.day ?? '');
-      setTime(initial.time ?? '');
+      setDay(initial.title ?? '');
+      // Parse time from "HH:MM - HH:MM" or separate startTime/endTime fields
+      if (initial.startTime && initial.endTime) {
+        setStartTime(parseTimeString(initial.startTime));
+        setEndTime(parseTimeString(initial.endTime));
+      } else if (initial.time) {
+        const [start, end] = initial.time.split('-').map(s => s.trim());
+        setStartTime(parseTimeString(start));
+        setEndTime(parseTimeString(end));
+      }
     } else {
       setDay('');
-      setTime('');
+      setStartTime(new Date());
+      setEndTime(new Date());
     }
   }, [initial, visible]);
 
@@ -39,11 +58,50 @@ export default function EditFreeTimeModal({visible, onClose, onSave, initial}) {
     {key:'7', value:'Sunday'},
   ];
 
+  const getDayName = (keyOrValue) => {
+    // If it's already a day name, return it
+    const dayByValue = days.find(d => d.value === keyOrValue);
+    if (dayByValue) return keyOrValue;
+    
+    // If it's a key, get the value
+    const dayByKey = days.find(d => d.key === keyOrValue);
+    return dayByKey ? dayByKey.value : keyOrValue;
+  };
+
+  const formatTime = (date) => {
+    if (!date || isNaN(date.getTime())) return '12:00 AM';
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  };
+
+  const openStartTimePicker = () => {
+    DateTimePickerAndroid.open({
+      value: startTime,
+      onChange: (event, selectedTime) => {
+        if (selectedTime) setStartTime(selectedTime);
+      },
+      mode: 'time',
+      is24Hour: false
+    });
+  };
+
+  const openEndTimePicker = () => {
+    DateTimePickerAndroid.open({
+      value: endTime,
+      onChange: (event, selectedTime) => {
+        if (selectedTime) setEndTime(selectedTime);
+      },
+      mode: 'time',
+      is24Hour: false
+    });
+  };
+
   function handleSave() {
+    const dayName = getDayName(day) || initial?.title || new Date().toLocaleDateString('en-US', { weekday: 'long' });
     const payload = {
       ...initial,
-      day: day || initial?.day || new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-      time: time || initial?.time || '',
+      title: dayName,
+      startTime: formatTime(startTime),
+      endTime: formatTime(endTime),
     };
     if (onSave) onSave(payload);
     onClose();
@@ -66,23 +124,29 @@ export default function EditFreeTimeModal({visible, onClose, onSave, initial}) {
             <Text style={styles.label}>Day</Text>
             <SelectList
               data={days}
-              value={day}
+              save="key"
               setSelected={setDay}
-              defaultOption={{key: days.find(d=>d.value===day)?.key, value: day}}
-              placeholder={day || 'Select a day...'}
+              defaultOption={days.find(d => d.value === initial?.title)}
+              placeholder={getDayName(day) || 'Select a day...'}
               boxStyles={styles.input}
               inputStyles={{color: '#333'}}
               dropdownTextStyles={{color: '#333'}}
             />
 
-            <Text style={styles.label}>Time</Text>
-            <TextInput
-              value={time}
-              onChangeText={setTime}
-              placeholder="e.g. 14:00 - 18:00"
-              style={styles.input}
-              placeholderTextColor="#bfbfbf"
-            />
+            <View style={styles.rowInputs}>
+              <View style={styles.smallInputWrap}>
+                <Text style={styles.smallLabel}>Start Time </Text>
+                <TouchableOpacity style={styles.smallInput} onPress={openStartTimePicker}>
+                  <Text style={styles.smallLabel}>{formatTime(startTime)}</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.smallInputWrap}>
+                <Text style={styles.smallLabel}>End Time</Text>
+                <TouchableOpacity style={styles.smallInput} onPress={openEndTimePicker}>
+                  <Text style={styles.smallLabel}>{formatTime(endTime)}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
             <TouchableOpacity activeOpacity={0.9} onPress={handleSave} style={styles.addBtnWrap}>
               <LinearGradient colors={["#FF5A4A", "#FFB84E"]} style={styles.addBtn} start={{x:0,y:0}} end={{x:1,y:0}}>

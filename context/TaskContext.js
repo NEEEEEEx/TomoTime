@@ -1,0 +1,120 @@
+import React, { createContext, useState, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export const TaskContext = createContext();
+
+const TASKS_STORAGE_KEY = 'scheduleTasks';
+
+export const TaskProvider = ({ children }) => {
+  const [tasks, setTasks] = useState([]);
+
+  // Initialize tasks from storage
+  const loadTasks = useCallback(async () => {
+    try {
+      const saved = await AsyncStorage.getItem(TASKS_STORAGE_KEY);
+      if (saved) {
+        setTasks(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error('Failed to load tasks:', error);
+    }
+  }, []);
+
+  // Persist tasks to storage
+  const persistTasks = useCallback(async (updatedTasks) => {
+    try {
+      await AsyncStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(updatedTasks));
+      setTasks(updatedTasks);
+    } catch (error) {
+      console.error('Failed to persist tasks:', error);
+    }
+  }, []);
+
+  // Add a new task
+  const addTask = useCallback((task) => {
+    const newTask = {
+      taskId: Date.now().toString(),
+      ...task,
+    };
+    
+    setTasks(prevTasks => {
+      const updatedTasks = [...prevTasks, newTask];
+      // Persist asynchronously without blocking
+      AsyncStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(updatedTasks)).catch(error => {
+        console.error('Failed to persist tasks:', error);
+      });
+      return updatedTasks;
+    });
+    
+    return newTask;
+  }, []);
+
+  // Update an existing task
+  const updateTask = useCallback((taskId, updates) => {
+    const updatedTasks = tasks.map(task =>
+      task.taskId === taskId ? { ...task, ...updates } : task
+    );
+    persistTasks(updatedTasks);
+  }, [tasks, persistTasks]);
+
+  // Delete a task
+  const deleteTask = useCallback((taskId) => {
+    const updatedTasks = tasks.filter(task => task.taskId !== taskId);
+    persistTasks(updatedTasks);
+  }, [tasks, persistTasks]);
+
+  // Get tasks for a specific date
+  const getTasksForDate = useCallback((dateString) => {
+    return tasks.filter(task => task.date === dateString);
+  }, [tasks]);
+
+  // Get all tasks
+  const getAllTasks = useCallback(() => {
+    return tasks;
+  }, [tasks]);
+
+  // Check for time conflicts
+  const checkTimeConflict = useCallback((date, startTime, endTime, excludeTaskId = null) => {
+    const tasksOnDate = tasks.filter(task => 
+      task.date === date && (!excludeTaskId || task.taskId !== excludeTaskId)
+    );
+
+    const timeToMinutes = (timeStr) => {
+      const [time, period] = timeStr.split(' ');
+      let [hours, minutes] = time.split(':').map(Number);
+      if (period === 'PM' && hours !== 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    };
+
+    const newStart = timeToMinutes(startTime);
+    const newEnd = timeToMinutes(endTime);
+
+    return tasksOnDate.filter(task => {
+      if (task.taskType === 'Deadline') return false; // Deadlines don't conflict with time
+      
+      const existingStart = timeToMinutes(task.startTime);
+      const existingEnd = timeToMinutes(task.endTime);
+
+      // Check for overlap
+      return !(newEnd <= existingStart || newStart >= existingEnd);
+    });
+  }, [tasks]);
+
+  const value = {
+    tasks,
+    loadTasks,
+    addTask,
+    updateTask,
+    deleteTask,
+    getTasksForDate,
+    getAllTasks,
+    checkTimeConflict,
+  };
+
+  return (
+    <TaskContext.Provider value={value}>
+      {children}
+    </TaskContext.Provider>
+  );
+};

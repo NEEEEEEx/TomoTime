@@ -12,26 +12,35 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { SelectList } from 'react-native-dropdown-select-list';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import styles from '../../styles/modalStyles';
 
 export default function EditClassScheduleModal({visible, onClose, onSave, initial}) {
   const [title, setTitle] = useState('');
   const [day, setDay] = useState(null);
-  const [startTime, setStartTime] = useState('00:00');
-  const [endTime, setEndTime] = useState('00:00');
+  const [startTime, setStartTime] = useState(new Date());
+  const [endTime, setEndTime] = useState(new Date());
+
+  const parseTimeString = (timeString) => {
+    if (!timeString) return new Date();
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours || 0, minutes || 0, 0, 0);
+    return date;
+  };
 
   useEffect(() => {
     if (initial) {
       setTitle(initial.title ?? '');
       const initialDayKey = days.find(d => d.value === initial.day)?.key;
       setDay(initialDayKey || null);
-      setStartTime(initial.startTime ?? '00:00');
-      setEndTime(initial.endTime ?? '00:00');
+      setStartTime(parseTimeString(initial.startTime));
+      setEndTime(parseTimeString(initial.endTime));
     } else {
       setTitle('');
       setDay('');
-      setStartTime('00:00');
-      setEndTime('00:00');
+      setStartTime(new Date());
+      setEndTime(new Date());
     }
   }, [initial, visible]);
 
@@ -47,14 +56,41 @@ export default function EditClassScheduleModal({visible, onClose, onSave, initia
 
   const getDayLabel = (key) => days.find(d => d.key === key)?.value;
 
+  const formatTime = (date) => {
+    if (!date || isNaN(date.getTime())) return '12:00 AM';
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  };
+
+  const openStartTimePicker = () => {
+    DateTimePickerAndroid.open({
+      value: startTime,
+      onChange: (event, selectedTime) => {
+        if (selectedTime) setStartTime(selectedTime);
+      },
+      mode: 'time',
+      is24Hour: false
+    });
+  };
+
+  const openEndTimePicker = () => {
+    DateTimePickerAndroid.open({
+      value: endTime,
+      onChange: (event, selectedTime) => {
+        if (selectedTime) setEndTime(selectedTime);
+      },
+      mode: 'time',
+      is24Hour: false
+    });
+  };
+
   function handleSave() {
     const dayLabel = getDayLabel(day) || initial?.day || new Date().toLocaleDateString('en-US', {weekday: 'long'});
     const payload = {
       ...initial,
       title: title || initial?.title || 'Untitled Class',
       day: dayLabel,
-      startTime: startTime || initial?.startTime || '00:00',
-      endTime: endTime || initial?.endTime || '00:00',
+      startTime: formatTime(startTime),
+      endTime: formatTime(endTime),
     };
     if (onSave) onSave(payload);
     onClose();
@@ -98,21 +134,15 @@ export default function EditClassScheduleModal({visible, onClose, onSave, initia
             <View style={styles.rowInputs}>
               <View style={styles.smallInputWrap}>
                 <Text style={styles.smallLabel}>Start Time </Text>
-                <TextInput
-                  value={startTime}
-                  onChangeText={setStartTime}
-                  keyboardType="numeric"
-                  style={styles.smallInput}
-                />
+                <TouchableOpacity style={styles.smallInput} onPress={openStartTimePicker}>
+                  <Text style={styles.smallLabel}>{formatTime(startTime)}</Text>
+                </TouchableOpacity>
               </View>
               <View style={styles.smallInputWrap}>
                 <Text style={styles.smallLabel}>End Time</Text>
-                <TextInput
-                  value={endTime}
-                  onChangeText={setEndTime}
-                  keyboardType="numeric"
-                  style={styles.smallInput}
-                />
+                <TouchableOpacity style={styles.smallInput} onPress={openEndTimePicker}>
+                  <Text style={styles.smallLabel}>{formatTime(endTime)}</Text>
+                </TouchableOpacity>
               </View>
             </View>
 

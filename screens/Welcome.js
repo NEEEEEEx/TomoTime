@@ -21,34 +21,42 @@ import { AuthContext } from '../context/AuthContext.js';
 export default function Welcome ()  {
   const [userInfo, setUserInfo] = useState(null);
   const navigation = useNavigation();
-  const { setUser } = useContext(AuthContext);
+  const { signIn } = useContext(AuthContext);
 
-  const signIn = async () => {
-    
+  const handleSignIn = async () => {
     try {
       await GoogleSignin.hasPlayServices(); 
       const userDetails = await GoogleSignin.signIn(); 
-      setUserInfo(userDetails);
 
-      if (userDetails.type == 'success') {
-        setUser(userDetails.data.user);
-        Alert.alert('Successfully signed in:', JSON.stringify(userDetails.data.user.name));
-        navigation.navigate('MultiStep');
-        return;
+      if (userDetails && userDetails.type === 'success') {
+        setUserInfo(userDetails);
+        // Use AuthContext signIn method
+        await signIn(userDetails.data.user);
+        
+        Alert.alert(
+          'Welcome!',
+          `Successfully signed in as ${userDetails.data.user.name}`,
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.navigate('MultiStep')
+            }
+          ]
+        );
+      } else if (userDetails) {
+        Alert.alert('Sign in failed', `Unexpected response type: ${userDetails.type}`);
       }
-      Alert.alert('Sign in type:', JSON.stringify(userDetails.type));
-
-      
-
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        Alert.alert('Sign-In Cancelled', 'User cancelled the sign-in flow');
+        // User cancelled - just log it, no alert needed
+        console.log('User cancelled the sign-in flow');
       } else if (error.code === statusCodes.IN_PROGRESS) {
         Alert.alert('Sign-In In Progress', 'Sign in is already in progress');
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         Alert.alert('Play Services Error', 'Google Play Services not available or outdated');
       } else {
-        console.error('Other error occurred:', error.message);
+        Alert.alert('Sign-In Error', error.message || 'An error occurred during sign-in');
+        console.error('Sign-in error:', error);
       }
     }
   };
@@ -104,7 +112,7 @@ export default function Welcome ()  {
           </Text>
 
           {/* ----- Google Sign In Button (gradient) -----*/}
-          <TouchableOpacity style={styles.button} activeOpacity={0.85} onPress={signIn}>
+          <TouchableOpacity style={styles.button} activeOpacity={0.85} onPress={handleSignIn}>
             <LinearGradient
               colors={['#FF3F41', '#FFBE5B']}
               start={{ x: 0, y: 0 }}
