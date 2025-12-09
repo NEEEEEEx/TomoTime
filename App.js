@@ -8,19 +8,21 @@ import CalendarPage from './screens/CalendarPage';
 import ChatAi from './screens/ChatAi';
 import { TaskProvider } from './context/TaskContext';
 import 'react-native-url-polyfill/auto';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Assuming you are using a library like react-native-dotenv for environment variables
-import { GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID } from '@env';
+
+// Import the Provider
+import { AuthProvider } from './context/AuthContext'; 
+
+import { GOOGLE_WEB_CLIENT_ID } from '@env';
 
 const configureGoogleSignIn = () => {
   GoogleSignin.configure({
-    webClientId: GOOGLE_WEB_CLIENT_ID, // required for offline access and backend validation
-    scopes: ['profile', 'email'], // scopes you want to request
-    offlineAccess: true, // if you need a server-side access token
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    scopes: ['profile', 'email'],
+    offlineAccess: true,
   });
 };
-
-
 
 const Stack = createNativeStackNavigator();
 
@@ -28,19 +30,19 @@ const App = () => {
   useEffect(() => {
     configureGoogleSignIn();
   }, []);
+
   return (
-    <TaskProvider>
+  <TaskProvider>
+    <AuthProvider> 
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="CalendarPage"
+          initialRouteName="Welcome"
           screenOptions={{
             headerTransparent: true,
             headerShadowVisible: false,
             headerTintColor: '#fff',
             headerTitleAlign: 'center',
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
+            headerTitleStyle: { fontWeight: 'bold' },
           }}>
 
           <Stack.Screen 
@@ -74,7 +76,8 @@ const App = () => {
 
         </Stack.Navigator>
       </NavigationContainer>
-    </TaskProvider>
+    </AuthProvider>
+  </TaskProvider>
   );
 };
 

@@ -28,7 +28,13 @@ import {
   getClassSchedule,
   getFreeTime
 } from '../utils/userPreferences';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
+//========= ASYNC STORAGE KEYS ===========//
+const SEMESTERS_KEY = '@TomoTime:semester_key';
+const CLASSES_KEY = '@TomoTime:classes_key';
+const FREE_TIME_KEY = '@TomoTime:free_time_key';
 
 //========= STEP  INDICATOR ==========//
 const steps = [
@@ -71,44 +77,121 @@ const stepsIndicatorStyles = {
 };
 //==================================//
 
-
 export default function MultiStep({ navigation, route}) {
+
+   //=============== USE STATES FOR INITIALIZATION ======//
+  const [semesters, setSemesters] = useState([]); //initialize as empty arrays
+  const [classes, setClasses] = useState([]);
+  const [freeTime, setFreeTime] =useState([]);
+
+  //=============================================//
   // =========== Use States ============ //
   const [currentPosition, setCurrentPosition] = useState(0);// Step Indicator Posistion
   const [addModalVisible, setAddModalVisible] = useState(false); // Add New Item Modal Visibility
   const [editModalVisible, setEditModalVisible] = useState(false); // Edit Item Modal Visibility
   const [itemToEdit, setItemToEdit] = useState(null); // currently editing item
+  const [loading, setLoading] = useState(true);
   // =================================== //
   
+  
+  //================================================//
+
+ 
+
+  //====== ASYNC STORAGE FUNCS -======//
+
+  const storeData = async (key, value) => {
+    try {
+      const asyncValue = JSON.stringify(value);
+      await AsyncStorage.setItem(key, asyncValue);
+      console.log(`Data stored in key success: ${key}`); //checks if json value is stored in asyncStorage
+    } catch (error) {
+      console.error(`Error saving data for: ${key}`, error);
+    }
+  };
+
+  const getData = async (key, fallbackData) => {
+    try {
+      const asyncValue = await AsyncStorage.getItem(key);
+      if (asyncValue != null) {
+        return JSON.parse(asyncValue);
+      } else {
+        return fallbackData; //if there is nothing in storage use sample data
+      }
+    } catch (error) {
+      console.error(`Error reading data for: ${key}`, error);
+      return fallbackData;
+    }
+  };
+  
+
   //=========== Sample Data for Each Step ===========//
-  const [semesters, setSemesters] = useState([
+  
+  useEffect(() => {
+    const sampleData = async () => {
+      const sampleSemesters = [
     { id: '1', title: 'Semester 2025-2026', study: '60 min.', break: '15 min.', selected: true },
     { id: '2', title: 's.y. 2024-2025', study: '40 min.', break: '10 min.', selected: false },
     { id: '3', title: 'Sem 2023-2024', study: '40 min.', break: '10 min.', selected: false },
-  ]);
+  ];
 
   
-  const [classes, setClasses] = useState([
-    { id: '1',  title: 'ITECC',  day: 'Friday',    startTime: '8:00',  endTime: '13:00' },
-    { id: '2',  title: 'ITS406', day: 'Wednesday', startTime: '13:30', endTime: '16:00' },
-    { id: '3',  title: 'ITS406', day: 'Monday',    startTime: '13:30', endTime: '16:00' },
-    { id: '4',  title: 'IIT413', day: 'Monday',    startTime: '16:30', endTime: '19:00' },
-    { id: '5',  title: 'IIT413', day: 'Wednesday', startTime: '16:30', endTime: '19:00' },
-    { id: '6',  title: 'IIT414', day: 'Saturday',  startTime: '7:30',  endTime: '12:30' },
-    { id: '7',  title: 'IIT415', day: 'Tuesday',   startTime: '7:30',  endTime: '9:00' },
-    { id: '8',  title: 'IIT415', day: 'Thursday',  startTime: '7:30',  endTime: '9:00' },
-    { id: '9',  title: 'GEE2',   day: 'Tuesday',   startTime: '13:30', endTime: '15:00' },
-    { id: '10', title: 'ITS405', day: 'Tuesday',   startTime: '17:00', endTime: '19:30' },
-    { id: '11', title: 'GEE2',   day: 'Thursday',  startTime: '13:30', endTime: '15:00' },
-    { id: '12', title: 'ITS405', day: 'Thursday',  startTime: '17:00', endTime: '19:30' },
-  ]);
+    const sampleClasses = [
+      { id: '1',  title: 'ITECC',  day: 'Friday',    startTime: '8:00',  endTime: '13:00' },
+      { id: '2',  title: 'ITS406', day: 'Wednesday', startTime: '13:30', endTime: '16:00' },
+      { id: '3',  title: 'ITS406', day: 'Monday',    startTime: '13:30', endTime: '16:00' },
+      { id: '4',  title: 'IIT413', day: 'Monday',    startTime: '16:30', endTime: '19:00' },
+      { id: '5',  title: 'IIT413', day: 'Wednesday', startTime: '16:30', endTime: '19:00' },
+      { id: '6',  title: 'IIT414', day: 'Saturday',  startTime: '7:30',  endTime: '12:30' },
+      { id: '7',  title: 'IIT415', day: 'Tuesday',   startTime: '7:30',  endTime: '9:00' },
+      { id: '8',  title: 'IIT415', day: 'Thursday',  startTime: '7:30',  endTime: '9:00' },
+      { id: '9',  title: 'GEE2',   day: 'Tuesday',   startTime: '13:30', endTime: '15:00' },
+      { id: '10', title: 'ITS405', day: 'Tuesday',   startTime: '17:00', endTime: '19:30' },
+      { id: '11', title: 'GEE2',   day: 'Thursday',  startTime: '13:30', endTime: '15:00' },
+      { id: '12', title: 'ITS405', day: 'Thursday',  startTime: '17:00', endTime: '19:30' },
+    ];  
   
-  const [freeTime, setFreeTime] = useState([
-    { id: '1', title: 'Monday', startTime: '7:30', endTime: '9:00' },
-    { id: '2', title: 'Wednesday', startTime: '7:30', endTime: '9:00' },
-    { id: '3', title: 'Friday', startTime: '14:00', endTime: '18:00' },
-  ]);
-  //================================================//
+     const sampleFreeTime = [
+      { id: '1', title: 'Monday', startTime: '7:30', endTime: '9:00' },
+      { id: '2', title: 'Wednesday', startTime: '7:30', endTime: '9:00' },
+      { id: '3', title: 'Friday', startTime: '14:00', endTime: '18:00' },
+    ];
+    //get the placeholder data and display them
+    setSemesters(await getData(SEMESTERS_KEY, sampleSemesters));
+    setClasses(await getData(CLASSES_KEY, sampleClasses));
+    setFreeTime(await getData(FREE_TIME_KEY, sampleFreeTime));
+
+    setLoading(false);
+  };
+    sampleData();
+}, []);
+
+  //save semesters
+  useEffect(() => {
+    if (!loading)
+    {
+      storeData(SEMESTERS_KEY, semesters);
+    }
+
+  }, [semesters, loading]);
+
+  //save classes
+  useEffect(() => {
+    if (!loading) {
+      storeData(CLASSES_KEY, classes);
+
+    }
+  }, [classes, loading]);
+  
+    //freetime
+  useEffect(() => {
+    if (!loading) {
+      storeData(FREE_TIME_KEY, freeTime);
+
+    }
+  }, [freeTime, loading]);
+  //===========End of async storage funcs==========//
+
 
   //=========== Load Data from AsyncStorage on Mount ===========//
   useEffect(() => {
@@ -167,6 +250,7 @@ export default function MultiStep({ navigation, route}) {
     } else {
       
       console.log('Submit Form. Navigate to Main Page')// Handle Form Submission Here
+      navigation.replace('CalendarPage');
     }
   };
   const goBack = () => {
@@ -255,8 +339,11 @@ export default function MultiStep({ navigation, route}) {
 
   // =========================================================== //
 
+    
   // 1. Render Semester Card (Selectable)
   const renderSemesterItem = ({ item }) => {
+    const studyTime = String(item.study).includes('min') ? item.study : `${item.study} min.`;
+    const breakTime = String(item.break).includes('min') ? item.break : `${item.break} min.`;
     const isSelected = item.selected;
     return (
       <TouchableOpacity activeOpacity={0.9} onPress={() => handleSelectSemester(item.id)}>
@@ -286,7 +373,9 @@ export default function MultiStep({ navigation, route}) {
             </View>
           </View>
           <View style={styles.cardBody}>
-            <Text style={[styles.timeLabel, isSelected && { color: 'white' }]}>Study: {item.study} | Break: {item.break}</Text>
+            <Text style={[styles.timeLabel, isSelected && { color: 'white' }]}>
+              Study: {studyTime} | Break: {breakTime}
+              </Text>
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -532,4 +621,4 @@ export default function MultiStep({ navigation, route}) {
       {/* -------- End of Edit Modal -------- */}
     </ImageBackground>
   );
-}
+};
