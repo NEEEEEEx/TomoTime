@@ -72,7 +72,7 @@ export default function EditSemesterModal({visible, onClose, onSave, initial}) {
                   onChangeText={setStudy}
                   keyboardType="numeric"
                   style={styles.smallInput}
-                  maxLength={3}
+                  maxLength={4}
                 />
               </View>
               <View style={styles.smallInputWrap}>
@@ -82,7 +82,7 @@ export default function EditSemesterModal({visible, onClose, onSave, initial}) {
                   onChangeText={setBrk}
                   keyboardType="numeric"
                   style={styles.smallInput}
-                  maxLength={3}
+                  maxLength={4}
                 />
               </View>
             </View>

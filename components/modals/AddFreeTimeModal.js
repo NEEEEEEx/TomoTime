@@ -29,6 +29,8 @@ export default function AddFreeTimeModal({visible, onClose, onAdd}) {
       '6': 'Saturday',
       '7': 'Sunday',
     };
+
+    //Wag galawin please. Nawawala yung freeTime
   function handleAdd() {
     const dayName = DAY[day] || 'Unknown Day';
     const payload = {
@@ -89,7 +91,7 @@ export default function AddFreeTimeModal({visible, onClose, onAdd}) {
                   onChangeText={setStartTime}
                   keyboardType="numeric"
                   style={styles.smallInput}
-                  maxLength={2}
+                  maxLength={4}
                 />
               </View>
               <View style={styles.smallInputWrap}>
@@ -99,7 +101,7 @@ export default function AddFreeTimeModal({visible, onClose, onAdd}) {
                   onChangeText={setEndTime}
                   keyboardType="numeric"
                   style={styles.smallInput}
-                  maxLength={2}
+                  maxLength={4}
                 />
               </View>
             </View>
