@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,15 +15,37 @@ import Octicons from 'react-native-vector-icons/Octicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import styles from '../styles/appStyles';
+import { TaskContext } from '../context/TaskContext';
 import EditTaskModal from '../components/modals/EditTaskModal';
 
 
 export default function CalendarPage () {
   const navigation = useNavigation();
+  const { tasks, loadTasks, updateTask, deleteTask } = useContext(TaskContext);
   const [selectedDate, setSelectedDate] = useState('');
   const [menuVisible, setMenuVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [itemToEdit, setItemToEdit] = useState(null);
+
+  // Load tasks on component mount
+  useEffect(() => {
+    (async () => {
+      console.log('CalendarPage: Loading tasks on mount');
+      await loadTasks();
+      console.log('CalendarPage: Tasks loaded, count:', tasks.length);
+    })();
+  }, []);
+
+  // Reload tasks when screen gains focus (e.g., after adding tasks from ChatAi)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      console.log('CalendarPage: Screen focused, reloading tasks');
+      await loadTasks();
+      console.log('CalendarPage: Tasks reloaded, count:', tasks.length);
+    });
+
+    return unsubscribe;
+  }, [navigation, loadTasks]);
 
   //=========== Burger Menu ============//
   const toggleMenu = () => {
@@ -37,9 +59,9 @@ export default function CalendarPage () {
   }
   //===================================//
 
-
-  //=========== Sample Data for Tasks ===========//
-  const [tasks, setTasks] = useState([
+  //=========== Initial Sample Data (can be removed once migration is complete) ===========//
+  // These are kept for reference - actual tasks come from TaskContext
+  const initialSampleTasks = [
     { 
       taskId: '11', 
       title: 'Quiz 1 - IIT414 (Part 1)', 
@@ -49,7 +71,7 @@ export default function CalendarPage () {
       startTime: '14:00',
       endTime: '15:00',
       priority: 'Medium',
-      taskType: 'Study', // Possible values: 'Study', 'Break', 'Deadline'
+      taskType: 'Study',
     },
     { 
       taskId: '12', 
@@ -59,7 +81,7 @@ export default function CalendarPage () {
       day: 'Saturday',
       startTime: '15:00',
       endTime: '15:15',
-      taskType: 'Break', // Possible values: 'Study', 'Break', 'Deadline'
+      taskType: 'Break',
     },
     { 
       taskId: '13', 
@@ -70,7 +92,7 @@ export default function CalendarPage () {
       startTime: '15:15',
       endTime: '16:15',
       priority: 'High',
-      taskType: 'Study', // Possible values: 'Study', 'Break', 'Deadline'
+      taskType: 'Study',
     },
     { 
       taskId: '14', 
@@ -80,9 +102,9 @@ export default function CalendarPage () {
       day: 'Saturday',
       endTime: '23:59',
       priority: 'High',
-      taskType: 'Deadline', // Possible values: 'Study', 'Break', 'Deadline'
+      taskType: 'Deadline',
     },
-  ]);
+  ];
   //==============================================//
 
   //=========== Task Type Color Identifiers ===========//
@@ -123,23 +145,19 @@ export default function CalendarPage () {
 
   // Save Task Edit Button
   const handleSaveTask = (saveData) => {
-    setTasks(prev =>
-      prev.map(task => 
-        task.taskId === saveData.taskId ? { ...task, ...saveData } : task
-      ));
+    updateTask(saveData.taskId, saveData);
     setItemToEdit(null); 
     setEditModalVisible(false);
   };
 
   // Delete Task Card from List
   const handleDeleteTask = (taskId) => {
-    Alert.alert('Delete Class', 'Are you sure you want to delete this class?', [
+    Alert.alert('Delete Task', 'Are you sure you want to delete this task?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', 
-        onPress: () => setTasks(prev => prev.filter(task => task.taskId !== taskId)) }
+        onPress: () => deleteTask(taskId) }
     ]);
   };
-
 
   //=============== End of Task Handlers ================//
 
@@ -245,6 +263,11 @@ export default function CalendarPage () {
   const filteredTasks = selectedDate
   ? tasks.filter(task => task.date === selectedDate)
   : tasks;
+  
+  console.log('CalendarPage: Selected date:', selectedDate);
+  console.log('CalendarPage: Total tasks:', tasks.length);
+  console.log('CalendarPage: Filtered tasks:', filteredTasks.length);
+  console.log('CalendarPage: Filtered task details:', JSON.stringify(filteredTasks, null, 2));
   //============== End of Filter Tasks by Selected Date ================//
 
   //=========== Marked Dates for Calendar ===========//

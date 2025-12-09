@@ -6,6 +6,7 @@ import Welcome from './screens/Welcome';
 import MultiStep from './screens/MultiStep';
 import CalendarPage from './screens/CalendarPage';
 import ChatAi from './screens/ChatAi';
+import { TaskProvider } from './context/TaskContext';
 import 'react-native-url-polyfill/auto';
 
 // Assuming you are using a library like react-native-dotenv for environment variables
@@ -28,26 +29,27 @@ const App = () => {
     configureGoogleSignIn();
   }, []);
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="CalendarPage"
-        screenOptions={{
-          headerTransparent: true,
-          headerShadowVisible: false,
-          headerTintColor: '#fff',
-          headerTitleAlign: 'center',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }}>
+    <TaskProvider>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName="CalendarPage"
+          screenOptions={{
+            headerTransparent: true,
+            headerShadowVisible: false,
+            headerTintColor: '#fff',
+            headerTitleAlign: 'center',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}>
 
-        <Stack.Screen 
-          name="Welcome" 
-          component={Welcome} 
-          options={{
-            headerShown: false,
-          }}
-        />
+          <Stack.Screen 
+            name="Welcome" 
+            component={Welcome} 
+            options={{
+              headerShown: false,
+            }}
+          />
         <Stack.Screen 
           name="MultiStep" 
           component={MultiStep} 
@@ -70,8 +72,9 @@ const App = () => {
           }}
         />
 
-      </Stack.Navigator>
-    </NavigationContainer>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </TaskProvider>
   );
 };
 

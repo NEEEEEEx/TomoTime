@@ -20,6 +20,14 @@ import AddFreeTimeModal from '../components/modals/AddFreeTimeModal';
 import EditSemesterModal from '../components/modals/EditSemesterModal';
 import EditClassScheduleModal from '../components/modals/EditClassScheduleModal';
 import EditFreeTimeModal from '../components/modals/EditFreeTimeModal';
+import { 
+  saveSemesterPreferences, 
+  saveClassSchedule, 
+  saveFreeTime,
+  getSemesterPreferences,
+  getClassSchedule,
+  getFreeTime
+} from '../utils/userPreferences';
 
 
 //========= STEP  INDICATOR ==========//
@@ -100,6 +108,44 @@ export default function MultiStep({ navigation, route}) {
     { id: '2', title: 'Wednesday', startTime: '7:30', endTime: '9:00' },
     { id: '3', title: 'Friday', startTime: '14:00', endTime: '18:00' },
   ]);
+  //================================================//
+
+  //=========== Load Data from AsyncStorage on Mount ===========//
+  useEffect(() => {
+    (async () => {
+      const savedSemester = await getSemesterPreferences();
+      const savedClasses = await getClassSchedule();
+      const savedFreeTime = await getFreeTime();
+
+      if (savedClasses && savedClasses.length > 0) {
+        setClasses(savedClasses);
+      }
+      
+      if (savedFreeTime && savedFreeTime.length > 0) {
+        setFreeTime(savedFreeTime);
+      }
+    })();
+  }, []);
+
+  //=========== Save Data to AsyncStorage when it changes ===========//
+  useEffect(() => {
+    const selectedSemester = semesters.find(s => s.selected);
+    if (selectedSemester) {
+      saveSemesterPreferences(selectedSemester);
+    }
+  }, [semesters]);
+
+  useEffect(() => {
+    if (classes.length > 0) {
+      saveClassSchedule(classes);
+    }
+  }, [classes]);
+
+  useEffect(() => {
+    if (freeTime.length > 0) {
+      saveFreeTime(freeTime);
+    }
+  }, [freeTime]);
   //================================================//
 
   //=========== Use Effect for Route Params ===========//
