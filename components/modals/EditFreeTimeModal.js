@@ -12,6 +12,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { SelectList } from 'react-native-dropdown-select-list';
 import styles from '../../styles/modalStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function EditFreeTimeModal({visible, onClose, onSave, initial}) {
   const [day, setDay] = useState('');

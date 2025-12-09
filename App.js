@@ -6,6 +6,8 @@ import Welcome from './screens/Welcome';
 import MultiStep from './screens/MultiStep';
 import CalendarPage from './screens/CalendarPage';
 import ChatAi from './screens/ChatAi';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 // Import the Provider
 import { AuthProvider } from './context/AuthContext'; 

@@ -15,6 +15,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import styles from '../styles/appStyles';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import {useNavigation} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../context/AuthContext.js'; 
 
 export default function Welcome ()  {
