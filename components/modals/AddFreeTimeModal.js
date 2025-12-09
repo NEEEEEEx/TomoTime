@@ -30,12 +30,38 @@ export default function AddFreeTimeModal({visible, onClose, onAdd}) {
       '7': 'Sunday',
     };
 
-    //Wag galawin please. Nawawala yung freeTime
+        const formatTime = (text) => {
+      const dataCleaning = text.replace(/[^\d]/g, '');
+
+      if (dataCleaning.length === 4) {
+        const hours = dataCleaning.substring(0, 2);
+        const minutes = dataCleaning.substring(2, 4);
+
+        const validHours = Math.min(23, parseInt(hours, 10)).toString().padStart(2, '0');
+        const validMinutes = Math.min(59, parseInt(minutes, 10)).toString().padStart(2, '0');
+        return `${validHours}:${validMinutes}`;
+      }
+      //return default 00:00
+      return text;
+    };
+
+        const handleStartTimeChange = (text) => {
+      setStartTime(text);
+
+    };
+
+    const handleEndTimeChange = (text) => {
+      setEndTime(text);
+    }
+
   function handleAdd() {
     const dayName = DAY[day] || 'Unknown Day';
+    const formattedStartTime = formatTime(startTime);
+    const formattedEndTime = formatTime(endTime);
+
     const payload = {
       title: dayName,
-      time: `${startTime}:00 - ${endTime}:00`,
+      time: `${formattedStartTime} - ${formattedEndTime}`,
     };
     if (onAdd) onAdd(payload);
     // reset
@@ -88,20 +114,22 @@ export default function AddFreeTimeModal({visible, onClose, onAdd}) {
                 <Text style={styles.smallLabel}>Start Time </Text>
                 <TextInput
                   value={startTime}
-                  onChangeText={setStartTime}
+                  onChangeText={handleStartTimeChange}
                   keyboardType="numeric"
                   style={styles.smallInput}
-                  maxLength={4}
+                  maxLength={5}
+                  onBlur={() => setStartTime(formatTime(startTime))}
                 />
               </View>
               <View style={styles.smallInputWrap}>
                 <Text style={styles.smallLabel}>End Time</Text>
                 <TextInput
                   value={endTime}
-                  onChangeText={setEndTime}
+                  onChangeText={handleEndTimeChange}
                   keyboardType="numeric"
                   style={styles.smallInput}
-                  maxLength={4}
+                  maxLength={5}
+                  onBlur={() => setEndTime(formatTime(endTime))}
                 />
               </View>
             </View>
