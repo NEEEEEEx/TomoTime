@@ -120,6 +120,9 @@ export default function ChatAi() {
       await addUserMessage(messageText)
       setMessageText('');
       setConversation([ ...getConversation() ]);
+      
+      // Scroll to end after adding user message
+      setTimeout(() => scrollToEnd(), 100);
 
       // If user is approving a pending plan, show the modal
       if (isApproval) {
@@ -155,10 +158,17 @@ export default function ChatAi() {
             console.log('Failed to parse study plan:', parseError);
           }
         }
+        
+        // Scroll to end after AI response
+        setConversation([ ...getConversation() ]);
+        setTimeout(() => scrollToEnd(), 100);
       } catch (chatError) {
-        // Remove the failed AI message
+        // Remove the failed user message from conversation history
         await removeLastMessage();
         setConversation([ ...getConversation() ]);
+        
+        // Restore the message to the input box
+        setMessageText(text);
         
         // Show error alert
         Alert.alert(
@@ -176,6 +186,8 @@ export default function ChatAi() {
     finally {
       setConversation([ ...getConversation() ]);
       setLoading(false);
+      // Ensure scroll to end after final state update
+      setTimeout(() => scrollToEnd(), 100);
     }
 
   }, [messageText, getAllTasks]);

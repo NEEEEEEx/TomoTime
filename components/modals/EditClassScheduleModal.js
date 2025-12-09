@@ -57,8 +57,8 @@ export default function EditClassScheduleModal({visible, onClose, onSave, initia
   const getDayLabel = (key) => days.find(d => d.key === key)?.value;
 
   const formatTime = (date) => {
-    if (!date || isNaN(date.getTime())) return '00:00';
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    if (!date || isNaN(date.getTime())) return '12:00 AM';
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   const openStartTimePicker = () => {
@@ -68,7 +68,7 @@ export default function EditClassScheduleModal({visible, onClose, onSave, initia
         if (selectedTime) setStartTime(selectedTime);
       },
       mode: 'time',
-      is24Hour: true
+      is24Hour: false
     });
   };
 
@@ -79,7 +79,7 @@ export default function EditClassScheduleModal({visible, onClose, onSave, initia
         if (selectedTime) setEndTime(selectedTime);
       },
       mode: 'time',
-      is24Hour: true
+      is24Hour: false
     });
   };
 

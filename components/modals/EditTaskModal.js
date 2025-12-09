@@ -137,7 +137,7 @@ export default function EditTaskModal({visible, onClose, onSave, initial}) {
   //============ Date and Time Formatting Helpers =========//
   const formatDate = d => (d && !isNaN(d.getTime()) ? d.toLocaleDateString() : 'Select date');
   const formatTime = t => (t && !isNaN(t.getTime())
-    ? t.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' })
+    ? t.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', hour12: true })
     : 'Select time');
   //============ End of Date and Time Formatting Helpers =========//
 

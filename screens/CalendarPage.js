@@ -479,7 +479,8 @@ export default function CalendarPage () {
               current={'2025-12-02'}
               // Callback that gets called when the user selects a day
               onDayPress={(day) => {
-                setSelectedDate(day.dateString);
+                // Toggle selection: if same day is pressed, deselect it
+                setSelectedDate(prevDate => prevDate === day.dateString ? '' : day.dateString);
               }}
               // Mark specific dates as marked
               markedDates={markedDates}

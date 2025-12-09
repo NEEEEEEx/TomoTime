@@ -32,8 +32,8 @@ export default function AddFreeTimeModal({visible, onClose, onAdd}) {
     };
 
   const formatTime = (date) => {
-    if (!date || isNaN(date.getTime())) return '00:00';
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    if (!date || isNaN(date.getTime())) return '12:00 AM';
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   const openStartTimePicker = () => {
@@ -43,7 +43,7 @@ export default function AddFreeTimeModal({visible, onClose, onAdd}) {
         if (selectedTime) setStartTime(selectedTime);
       },
       mode: 'time',
-      is24Hour: true
+      is24Hour: false
     });
   };
 
@@ -54,7 +54,7 @@ export default function AddFreeTimeModal({visible, onClose, onAdd}) {
         if (selectedTime) setEndTime(selectedTime);
       },
       mode: 'time',
-      is24Hour: true
+      is24Hour: false
     });
   };
 

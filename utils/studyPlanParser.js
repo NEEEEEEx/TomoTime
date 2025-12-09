@@ -38,18 +38,33 @@ export const parseStudyPlan = (aiResponse) => {
     const titleMatch = trimmed.match(/^[\d.]*\s*\*\*([^*]+)\*\*/);
     if (titleMatch) {
       // Save previous task if exists
-      if (currentTask) {
+      if (currentTask && currentTask.title) {
         console.log('Saving previous task:', currentTask);
         tasks.push(currentTask);
       }
       
+      const title = titleMatch[1].trim();
       currentTask = {
-        title: titleMatch[1].trim(),
+        title: title,
         description: '',
         taskType: 'Study', // Default
         priority: 'Medium', // Default
       };
-      console.log('New task started:', currentTask.title);
+      
+      // Infer task type from title
+      const lowerTitle = title.toLowerCase();
+      if (lowerTitle.includes('break')) {
+        currentTask.taskType = 'Break';
+        currentTask.priority = 'Low';
+      } else if (lowerTitle.includes('deadline') || lowerTitle.includes('due') || lowerTitle.includes('exam') || lowerTitle.includes('quiz') || lowerTitle.includes('test') || lowerTitle.includes('project')) {
+        // Check if the title itself suggests it's a deadline
+        if (lowerTitle.includes('deadline') || lowerTitle.includes('due')) {
+          currentTask.taskType = 'Deadline';
+          currentTask.priority = 'High';
+        }
+      }
+      
+      console.log('New task started:', currentTask.title, 'Type:', currentTask.taskType);
       taskCount++;
     }
 
@@ -57,15 +72,9 @@ export const parseStudyPlan = (aiResponse) => {
     if (currentTask) {
       const explicitTypeMatch = trimmed.match(/^Type:\s*(Study|Break|Deadline)$/i);
       if (explicitTypeMatch) {
-        currentTask.taskType = explicitTypeMatch[1].charAt(0).toUpperCase() + explicitTypeMatch[1].slice(1).toLowerCase();
-      } else if (!currentTask.date) { // Only infer type from title if not explicitly set
-        if (trimmed.toLowerCase().includes('break')) {
-          currentTask.taskType = 'Break';
-        } else if (trimmed.toLowerCase().includes('deadline') || trimmed.toLowerCase().includes('due')) {
-          currentTask.taskType = 'Deadline';
-        } else if (trimmed.toLowerCase().includes('study')) {
-          currentTask.taskType = 'Study';
-        }
+        const typeValue = explicitTypeMatch[1].charAt(0).toUpperCase() + explicitTypeMatch[1].slice(1).toLowerCase();
+        currentTask.taskType = typeValue;
+        console.log(`Explicit type found: ${typeValue} for task: ${currentTask.title}`);
       }
 
       // Extract date (YYYY-MM-DD format)
@@ -75,6 +84,7 @@ export const parseStudyPlan = (aiResponse) => {
         const dateObj = new Date(dateMatch[1]);
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         currentTask.day = days[dateObj.getDay()];
+        console.log(`Date found: ${currentTask.date} (${currentTask.day}) for task: ${currentTask.title}`);
       }
 
       // Extract time range (HH:MM AM/PM - HH:MM AM/PM) or single time for deadlines

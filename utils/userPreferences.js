@@ -49,7 +49,7 @@ export const saveSelectedSemester = async (semesterId) => {
       selected: sem.id === semesterId
     }));
     await saveSemesters(updatedSemesters);
-    await AsyncStorage.setItem(SELECTED_SEMESTER_KEY, semesterId);
+    await AsyncStorage.setItem(SELECTED_SEMESTER_KEY, String(semesterId));
   } catch (error) {
     console.error('Failed to save selected semester:', error);
   }
@@ -111,16 +111,14 @@ export const saveSemesterPreferences = async (semester) => {
 
 export const getSemesterPreferences = async () => {
   try {
-    // Try to get selected semester from new system
+    // Get selected semester from new system
     const selectedSemester = await getSelectedSemester();
     if (selectedSemester) {
-      await AsyncStorage.setItem(SEMESTER_KEY, JSON.stringify(selectedSemester));
       return selectedSemester;
     }
     
-    // Fall back to legacy system
-    const saved = await AsyncStorage.getItem(SEMESTER_KEY);
-    return saved ? JSON.parse(saved) : null;
+    // If no semester is selected, return null
+    return null;
   } catch (error) {
     console.error('Failed to load semester preferences:', error);
     return null;
@@ -143,19 +141,15 @@ export const saveClassSchedule = async (classes) => {
 
 export const getClassSchedule = async () => {
   try {
-    // Try to get from selected semester
+    // Get from selected semester only
     const selectedSemester = await getSelectedSemester();
     if (selectedSemester) {
       const classes = await getClassScheduleForSemester(selectedSemester.id);
-      if (classes.length > 0) {
-        await AsyncStorage.setItem(CLASSES_KEY, JSON.stringify(classes));
-        return classes;
-      }
+      return classes;
     }
     
-    // Fall back to legacy system
-    const saved = await AsyncStorage.getItem(CLASSES_KEY);
-    return saved ? JSON.parse(saved) : [];
+    // No selected semester, return empty array
+    return [];
   } catch (error) {
     console.error('Failed to load class schedule:', error);
     return [];
@@ -178,19 +172,15 @@ export const saveFreeTime = async (freeTime) => {
 
 export const getFreeTime = async () => {
   try {
-    // Try to get from selected semester
+    // Get from selected semester only
     const selectedSemester = await getSelectedSemester();
     if (selectedSemester) {
       const freeTime = await getFreeTimeForSemester(selectedSemester.id);
-      if (freeTime.length > 0) {
-        await AsyncStorage.setItem(FREETIME_KEY, JSON.stringify(freeTime));
-        return freeTime;
-      }
+      return freeTime;
     }
     
-    // Fall back to legacy system
-    const saved = await AsyncStorage.getItem(FREETIME_KEY);
-    return saved ? JSON.parse(saved) : [];
+    // No selected semester, return empty array
+    return [];
   } catch (error) {
     console.error('Failed to load free time:', error);
     return [];
@@ -212,17 +202,25 @@ export const getUserScheduleContext = async () => {
 
 // ============= Format for AI Context ============= //
 export const formatScheduleForAI = async () => {
-  const { semester, classes, freeTime } = await getUserScheduleContext();
+  const selectedSemester = await getSelectedSemester();
+  
+  // If no semester is selected, return a message prompting user to select one
+  if (!selectedSemester) {
+    return `\n\nNOTE: No semester is currently selected. Please ask the user to select a semester in the Multi-Step setup before creating study plans.`;
+  }
+
+  const classes = await getClassScheduleForSemester(selectedSemester.id);
+  const freeTime = await getFreeTimeForSemester(selectedSemester.id);
 
   let context = '';
 
   // Add semester preferences
-  if (semester) {
-    context += `\n\nUSER'S STUDY PREFERENCES:\n`;
-    context += `- Semester: ${semester.title}\n`;
-    context += `- Preferred study block duration: ${semester.study}\n`;
-    context += `- Preferred break duration: ${semester.break}\n`;
-  }
+  context += `\n\nUSER'S STUDY PREFERENCES (Current Semester: ${selectedSemester.title}):\n`;
+  const studyTime = String(selectedSemester.study).includes('min') ? selectedSemester.study : `${selectedSemester.study} min`;
+  const breakTime = String(selectedSemester.break).includes('min') ? selectedSemester.break : `${selectedSemester.break} min`;
+  context += `- Semester: ${selectedSemester.title}\n`;
+  context += `- Preferred study block duration: ${studyTime}\n`;
+  context += `- Preferred break duration: ${breakTime}\n`;
 
   // Add class schedule
   if (classes && classes.length > 0) {
@@ -270,6 +268,8 @@ export const formatScheduleForAI = async () => {
   // Add instructions
   if (classes.length > 0 || freeTime.length > 0) {
     context += `\n\nIMPORTANT: When creating study plans, ONLY schedule study sessions during the user's available free time listed above. AVOID scheduling during class times. Use the user's preferred study and break durations when possible.`;
+  } else {
+    context += `\n\nNOTE: The user has not added any class schedule or free time slots yet. Please remind them to add this information in the Multi-Step setup for better study plan recommendations.`;
   }
 
   return context;

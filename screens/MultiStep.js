@@ -169,40 +169,12 @@ export default function MultiStep({ navigation, route}) {
   //=========== Sample Data for Each Step ===========//
   
   useEffect(() => {
-    const sampleData = async () => {
-      const sampleSemesters = [
-    { id: '1', title: 'Semester 2025-2026', study: '60 min.', break: '15 min.', selected: true },
-    { id: '2', title: 's.y. 2024-2025', study: '40 min.', break: '10 min.', selected: false },
-    { id: '3', title: 'Sem 2023-2024', study: '40 min.', break: '10 min.', selected: false },
-  ];
-
-  
-    const sampleClasses = [
-      { id: '1',  title: 'ITECC',  day: 'Friday',    startTime: '8:00',  endTime: '13:00' },
-      { id: '2',  title: 'ITS406', day: 'Wednesday', startTime: '13:30', endTime: '16:00' },
-      { id: '3',  title: 'ITS406', day: 'Monday',    startTime: '13:30', endTime: '16:00' },
-      { id: '4',  title: 'IIT413', day: 'Monday',    startTime: '16:30', endTime: '19:00' },
-      { id: '5',  title: 'IIT413', day: 'Wednesday', startTime: '16:30', endTime: '19:00' },
-      { id: '6',  title: 'IIT414', day: 'Saturday',  startTime: '7:30',  endTime: '12:30' },
-      { id: '7',  title: 'IIT415', day: 'Tuesday',   startTime: '7:30',  endTime: '9:00' },
-      { id: '8',  title: 'IIT415', day: 'Thursday',  startTime: '7:30',  endTime: '9:00' },
-      { id: '9',  title: 'GEE2',   day: 'Tuesday',   startTime: '13:30', endTime: '15:00' },
-      { id: '10', title: 'ITS405', day: 'Tuesday',   startTime: '17:00', endTime: '19:30' },
-      { id: '11', title: 'GEE2',   day: 'Thursday',  startTime: '13:30', endTime: '15:00' },
-      { id: '12', title: 'ITS405', day: 'Thursday',  startTime: '17:00', endTime: '19:30' },
-    ];  
-  
-     const sampleFreeTime = [
-      { id: '1', title: 'Monday', startTime: '7:30', endTime: '9:00' },
-      { id: '2', title: 'Wednesday', startTime: '7:30', endTime: '9:00' },
-      { id: '3', title: 'Friday', startTime: '14:00', endTime: '18:00' },
-    ];
-    
+    const loadData = async () => {
     // Load validation state
     const validation = await getMultiStepValidation();
     setStepValidation(validation);
     
-    // Load semesters from new storage system
+    // Load semesters from storage system
     const savedSemesters = await getSemesters();
     if (savedSemesters && savedSemesters.length > 0) {
       setSemesters(savedSemesters);
@@ -213,25 +185,25 @@ export default function MultiStep({ navigation, route}) {
         const semesterClasses = await getClassScheduleForSemester(selectedSemester.id);
         const semesterFreeTime = await getFreeTimeForSemester(selectedSemester.id);
         
-        if (semesterClasses.length > 0) setClasses(semesterClasses);
-        else setClasses(await getData(CLASSES_KEY, sampleClasses));
-        
-        if (semesterFreeTime.length > 0) setFreeTime(semesterFreeTime);
-        else setFreeTime(await getData(FREE_TIME_KEY, sampleFreeTime));
+        setClasses(semesterClasses);
+        setFreeTime(semesterFreeTime);
       } else {
-        setClasses(await getData(CLASSES_KEY, sampleClasses));
-        setFreeTime(await getData(FREE_TIME_KEY, sampleFreeTime));
+        // No semester selected, load from general storage
+        const storedClasses = await getData(CLASSES_KEY, []);
+        const storedFreeTime = await getData(FREE_TIME_KEY, []);
+        setClasses(storedClasses);
+        setFreeTime(storedFreeTime);
       }
     } else {
-      // Use sample data if no semesters exist
-      setSemesters(await getData(SEMESTERS_KEY, sampleSemesters));
-      setClasses(await getData(CLASSES_KEY, sampleClasses));
-      setFreeTime(await getData(FREE_TIME_KEY, sampleFreeTime));
+      // No semesters exist - start with empty arrays
+      setSemesters([]);
+      setClasses([]);
+      setFreeTime([]);
     }
 
     setLoading(false);
   };
-    sampleData();
+    loadData();
 }, []);
 
   //save semesters
@@ -421,7 +393,20 @@ export default function MultiStep({ navigation, route}) {
   };
 
   const handleAddSemester = (payload) => {
-    setSemesters(prev => [{ id: Date.now(), ...payload }, ...prev]);
+    try {
+      const newSemester = { 
+        id: Date.now(), 
+        title: payload.title || 'New Semester',
+        study: payload.study || 0,
+        break: payload.break || 0,
+        selected: false 
+      };
+      setSemesters(prev => [newSemester, ...prev]);
+      setAddModalVisible(false);
+    } catch (error) {
+      console.error('Error adding semester:', error);
+      Alert.alert('Error', 'Failed to add semester. Please try again.');
+    }
   };
 
   const handleDeleteSemester = (id) => {
@@ -500,7 +485,10 @@ export default function MultiStep({ navigation, route}) {
     return (
       <TouchableOpacity activeOpacity={0.9} onPress={() => handleSelectSemester(item.id)}>
         <LinearGradient
-          colors={isSelected ? ['#be1c1c', '#f9aa32'] : ['#fffefc', '#fffefc']}
+          colors={isSelected ? ['#be1c1c', '#f9aa32'] : 
+            ['#fffefc', '#fffefc']}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 1, y: 0 }}
           style={[styles.cardWrapper, isSelected && styles.cardSelected]} // Ensure styles.cardSelected exists or remove
         >
           <View style={styles.cardHeaderRow}>
