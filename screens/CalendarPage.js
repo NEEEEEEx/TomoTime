@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,31 +15,87 @@ import Octicons from 'react-native-vector-icons/Octicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import styles from '../styles/appStyles';
+import { TaskContext } from '../context/TaskContext';
+import { AuthContext } from '../context/AuthContext';
 import EditTaskModal from '../components/modals/EditTaskModal';
 
 
 export default function CalendarPage () {
   const navigation = useNavigation();
+  const { tasks, loadTasks, updateTask, deleteTask } = useContext(TaskContext);
+  const { signOut } = useContext(AuthContext);
   const [selectedDate, setSelectedDate] = useState('');
-  const [menuVisible, setMenuVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [itemToEdit, setItemToEdit] = useState(null);
+  const [burgerMenuVisible, setBurgerMenuVisible] = useState(false);
+  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
+
+  // Load tasks on component mount
+  useEffect(() => {
+    (async () => {
+      console.log('CalendarPage: Loading tasks on mount');
+      await loadTasks();
+      console.log('CalendarPage: Tasks loaded, count:', tasks.length);
+    })();
+  }, []);
+
+  // Reload tasks when screen gains focus (e.g., after adding tasks from ChatAi)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      console.log('CalendarPage: Screen focused, reloading tasks');
+      await loadTasks();
+      console.log('CalendarPage: Tasks reloaded, count:', tasks.length);
+    });
+
+    return unsubscribe;
+  }, [navigation, loadTasks]);
 
   //=========== Burger Menu ============//
-  const toggleMenu = () => {
-    setMenuVisible(!menuVisible);
+  const toggleBurgerMenu = () => {
+    setBurgerMenuVisible(!burgerMenuVisible);
   }
 
   const handleMenuItemPress = (screen, stepIdx) => {
-    setMenuVisible(false);
+    setBurgerMenuVisible(false);
 
     navigation.navigate(screen, {initialStep: stepIdx});
   }
   //===================================//
 
+  //=========== Profile Menu ============//
+  const toggleProfileMenu = () => {
+    setProfileMenuVisible(!profileMenuVisible);
+  }
 
-  //=========== Sample Data for Tasks ===========//
-  const [tasks, setTasks] = useState([
+  const handleLogout = async () => {
+    setProfileMenuVisible(false);
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Log Out',
+          onPress: async () => {
+            await signOut();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Welcome' }],
+            });
+          },
+          style: 'destructive'
+        }
+      ]
+    );
+  }
+  //===================================//
+
+  //=========== Initial Sample Data (can be removed once migration is complete) ===========//
+  // These are kept for reference - actual tasks come from TaskContext
+  const initialSampleTasks = [
     { 
       taskId: '11', 
       title: 'Quiz 1 - IIT414 (Part 1)', 
@@ -49,7 +105,7 @@ export default function CalendarPage () {
       startTime: '14:00',
       endTime: '15:00',
       priority: 'Medium',
-      taskType: 'Study', // Possible values: 'Study', 'Break', 'Deadline'
+      taskType: 'Study',
     },
     { 
       taskId: '12', 
@@ -59,7 +115,7 @@ export default function CalendarPage () {
       day: 'Saturday',
       startTime: '15:00',
       endTime: '15:15',
-      taskType: 'Break', // Possible values: 'Study', 'Break', 'Deadline'
+      taskType: 'Break',
     },
     { 
       taskId: '13', 
@@ -70,7 +126,7 @@ export default function CalendarPage () {
       startTime: '15:15',
       endTime: '16:15',
       priority: 'High',
-      taskType: 'Study', // Possible values: 'Study', 'Break', 'Deadline'
+      taskType: 'Study',
     },
     { 
       taskId: '14', 
@@ -80,9 +136,9 @@ export default function CalendarPage () {
       day: 'Saturday',
       endTime: '23:59',
       priority: 'High',
-      taskType: 'Deadline', // Possible values: 'Study', 'Break', 'Deadline'
+      taskType: 'Deadline',
     },
-  ]);
+  ];
   //==============================================//
 
   //=========== Task Type Color Identifiers ===========//
@@ -123,23 +179,19 @@ export default function CalendarPage () {
 
   // Save Task Edit Button
   const handleSaveTask = (saveData) => {
-    setTasks(prev =>
-      prev.map(task => 
-        task.taskId === saveData.taskId ? { ...task, ...saveData } : task
-      ));
+    updateTask(saveData.taskId, saveData);
     setItemToEdit(null); 
     setEditModalVisible(false);
   };
 
   // Delete Task Card from List
   const handleDeleteTask = (taskId) => {
-    Alert.alert('Delete Class', 'Are you sure you want to delete this class?', [
+    Alert.alert('Delete Task', 'Are you sure you want to delete this task?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', 
-        onPress: () => setTasks(prev => prev.filter(task => task.taskId !== taskId)) }
+        onPress: () => deleteTask(taskId) }
     ]);
   };
-
 
   //=============== End of Task Handlers ================//
 
@@ -245,6 +297,11 @@ export default function CalendarPage () {
   const filteredTasks = selectedDate
   ? tasks.filter(task => task.date === selectedDate)
   : tasks;
+  
+  console.log('CalendarPage: Selected date:', selectedDate);
+  console.log('CalendarPage: Total tasks:', tasks.length);
+  console.log('CalendarPage: Filtered tasks:', filteredTasks.length);
+  console.log('CalendarPage: Filtered task details:', JSON.stringify(filteredTasks, null, 2));
   //============== End of Filter Tasks by Selected Date ================//
 
   //=========== Marked Dates for Calendar ===========//
@@ -287,13 +344,13 @@ export default function CalendarPage () {
           {/* ----- App Header (menu, title, profile) ----- */}
           <View style={styles.headerRow}>
             <View style={styles.leftHeader}>
-              <TouchableOpacity onPress={toggleMenu}>
+              <TouchableOpacity onPress={toggleBurgerMenu}>
                 <FontAwesome5 name="bars" size={22} color="#461F04" />
               </TouchableOpacity>
             </View>
 
             {/* -------- Burger Menu Dropdown -------- */}
-            {menuVisible && (
+            {burgerMenuVisible && (
               <View style={styles.burgerMenu}>
                 <TouchableOpacity 
                   style={[styles.menuItem,{
@@ -303,7 +360,6 @@ export default function CalendarPage () {
                   onPress={() => handleMenuItemPress('MultiStep', 0)}>
                   <Text style={styles.menuText}>Semester</Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity 
                   style={[styles.menuItem,{
                     borderBottomWidth: 1,
@@ -319,22 +375,34 @@ export default function CalendarPage () {
                   <Text style={styles.menuText}>Free Time</Text>
                 </TouchableOpacity>
               </View>
+              
             )}
 
             <View style={styles.titleWrap}>
               <Text style={styles.headerTitle}>Tomo Time</Text>
             </View>
-
-            <LinearGradient
-              colors={['#FF3F41', '#FFBE5B']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradientContainer}
-            >
-              <View style={styles.profileCircle}>
-                <FontAwesome5 name="user-alt" size={18} color="#BE1C1C" />
+            
+            <TouchableOpacity onPress={toggleProfileMenu}>
+              <LinearGradient
+                colors={['#FF5F6D', '#FFC371']} // Your gradient colors
+                start={{ x: 0, y: 1 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.gradientContainer}
+              >
+                  <Image source={require('../assests/images/default-profile.jpg')} style={styles.profileCircle} />
+              </LinearGradient>  
+            </TouchableOpacity>
+            
+            {/* ---------- Profile Menu Dropdown ---------- */}
+            {profileMenuVisible && (
+              <View style={styles.profileMenu}>
+                <TouchableOpacity 
+                  style={styles.menuItem}
+                  onPress={handleLogout}>
+                  <Text style={styles.menuText}>Log out</Text>
+                </TouchableOpacity>
               </View>
-            </LinearGradient>
+            )}
           </View>
 
           <View style={{ alignItems: 'center' }}>
@@ -411,7 +479,8 @@ export default function CalendarPage () {
               current={'2025-12-02'}
               // Callback that gets called when the user selects a day
               onDayPress={(day) => {
-                setSelectedDate(day.dateString);
+                // Toggle selection: if same day is pressed, deselect it
+                setSelectedDate(prevDate => prevDate === day.dateString ? '' : day.dateString);
               }}
               // Mark specific dates as marked
               markedDates={markedDates}

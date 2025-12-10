@@ -7,12 +7,15 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   Keyboard,
+  ScrollView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { SelectList } from 'react-native-dropdown-select-list';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import styles from '../../styles/modalStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function EditTaskModal({visible, onClose, onSave, initial}) {
 
@@ -22,6 +25,7 @@ export default function EditTaskModal({visible, onClose, onSave, initial}) {
   const [priority, setPriority] = useState('');
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
+  const [taskType, setTaskType] = useState('Study');
 
 //================= Load Initial Data ==============//
   // Convert "03:30 PM" into a Date on the same day as dateStr
@@ -43,7 +47,8 @@ export default function EditTaskModal({visible, onClose, onSave, initial}) {
 
       setTitle(initial.title || "");
       setDescription(initial.description || "");
-      setPriority(priorityMap[initial.priority] || '');
+      setPriority(priorityMap[initial.priority] || initial.priority || '');
+      setTaskType(initial.taskType || 'Study');
 
   
       // Convert strings to JS Dates
@@ -59,10 +64,15 @@ export default function EditTaskModal({visible, onClose, onSave, initial}) {
   
   function handleSave() {
     onSave({
-      taskId: initial.taskId, title, description, priority,
+      taskId: initial.taskId, 
+      title, 
+      description, 
+      priority,
+      taskType,
       date: date.toISOString().split("T")[0], // yyyy-mm-dd
       startTime: formatTime(startTime),
-      endTime: formatTime(endTime)
+      endTime: formatTime(endTime),
+      day: getDayName(date)
     });
   }
   
@@ -71,6 +81,17 @@ export default function EditTaskModal({visible, onClose, onSave, initial}) {
     {key:'2', value:'Medium'},
     {key:'3', value:'High'},
   ];
+
+  const taskTypes = [
+    {key:'1', value:'Study'},
+    {key:'2', value:'Break'},
+    {key:'3', value:'Deadline'},
+  ];
+
+  const getDayName = (d) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[d.getDay()];
+  };
 
   //============ Date and Time Pickers =========//
 
@@ -116,7 +137,7 @@ export default function EditTaskModal({visible, onClose, onSave, initial}) {
   //============ Date and Time Formatting Helpers =========//
   const formatDate = d => (d && !isNaN(d.getTime()) ? d.toLocaleDateString() : 'Select date');
   const formatTime = t => (t && !isNaN(t.getTime())
-    ? t.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' })
+    ? t.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', hour12: true })
     : 'Select time');
   //============ End of Date and Time Formatting Helpers =========//
 
@@ -124,70 +145,97 @@ export default function EditTaskModal({visible, onClose, onSave, initial}) {
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.backdrop}>
-          <View style={styles.sheet}>
-            <View style={styles.headerRow}>
-              <Text style={styles.title}>Edit Task</Text>
-              <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                <FontAwesome name="times" size={18} color="#333" />
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+            <View style={styles.sheet}>
+              <View style={styles.headerRow}>
+                <Text style={styles.title}>Edit Task</Text>
+                <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                  <FontAwesome name="times" size={18} color="#333" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.subtitle}>Edit your Task details</Text>
+
+              <Text style={styles.label}>Task Name</Text>
+              <TextInput
+                value={title}
+                onChangeText={setTitle}
+                style={styles.input}
+                placeholderTextColor="#bfbfbf"
+              />
+
+              <Text style={styles.label}>Description</Text>
+              <TextInput
+                value={description}
+                onChangeText={setDescription}
+                style={styles.input}
+                placeholderTextColor="#bfbfbf"
+              />
+
+              <Text style={styles.label}>Task Type</Text>
+              <SelectList
+                data={taskTypes}
+                save="value"
+                value={taskType}
+                setSelected={setTaskType}
+                defaultOption={taskTypes.find(t => t.value === taskType)}
+                boxStyles={styles.input}
+                inputStyles={{color: '#333'}}
+                dropdownTextStyles={{color: '#333'}}
+              />
+
+              <Text style={styles.label}>Date</Text>
+              <TouchableOpacity style={styles.input} onPress={openDatePicker}>
+                <Text style={styles.label}>{formatDate(date)}</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.label}>Priority Level</Text>
+              <SelectList
+                data={priorityLevels}
+                save="value"
+                value={priority}
+                setSelected={setPriority}
+                defaultOption={priorityLevels.find(p => p.value === priority)}
+                boxStyles={styles.input}
+                inputStyles={{color: '#333'}}
+                dropdownTextStyles={{color: '#333'}}
+              />
+
+              {taskType !== 'Deadline' && (
+                <View style={styles.rowInputs}>
+                  <View style={styles.smallInputWrap}>
+                    <Text style={styles.smallLabel}>Start Time </Text>
+                    <TouchableOpacity style={styles.smallInput} onPress={openStartTimePicker}>
+                      <Text style={styles.smallLabel}>{formatTime(startTime)}</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.smallInputWrap}>
+                    <Text style={styles.smallLabel}>End Time</Text>
+                    <TouchableOpacity style={styles.smallInput} onPress={openEndTimePicker}>
+                      <Text style={styles.smallLabel}>{formatTime(endTime)}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {taskType === 'Deadline' && (
+                <View style={styles.rowInputs}>
+                  <View style={{flex: 1}}>
+                    <Text style={styles.label}>Deadline Time</Text>
+                    <TouchableOpacity style={styles.input} onPress={openEndTimePicker}>
+                      <Text style={styles.label}>{formatTime(endTime)}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              <TouchableOpacity activeOpacity={0.9} onPress={handleSave} style={styles.addBtnWrap}>
+                <LinearGradient colors={["#FF5A4A", "#FFB84E"]} style={styles.addBtn} start={{x:0,y:0}} end={{x:1,y:0}}>
+                  <Text style={styles.addBtnText}>Save Changes</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
-
-            <Text style={styles.subtitle}>Edit your Task details</Text>
-
-            <Text style={styles.label}>Task Name</Text>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              style={styles.input}
-              placeholderTextColor="#bfbfbf"
-            />
-
-            <Text style={styles.label}>Description</Text>
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              style={styles.input}
-              placeholderTextColor="#bfbfbf"
-            />
-
-            <Text style={styles.label}>Date</Text>
-            <TouchableOpacity style={styles.input} onPress={openDatePicker}>
-              <Text style={styles.label}>{formatDate(date)}</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.label}>Priority Level</Text>
-            <SelectList
-              data={priorityLevels}
-              save="value"
-              value={priority}
-              setSelected={setPriority}
-              defaultOption={priorityLevels.find(p => p.value === priority)}
-              boxStyles={styles.input}
-              inputStyles={{color: '#333'}}
-              dropdownTextStyles={{color: '#333'}}
-            />
-
-            <View style={styles.rowInputs}>
-              <View style={styles.smallInputWrap}>
-                <Text style={styles.smallLabel}>Start Time </Text>
-                <TouchableOpacity style={styles.smallInput} onPress={openStartTimePicker}>
-                  <Text style={styles.smallLabel}>{formatTime(startTime)}</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.smallInputWrap}>
-                <Text style={styles.smallLabel}>End Time</Text>
-                <TouchableOpacity style={styles.smallInput} onPress={openEndTimePicker}>
-                  <Text style={styles.smallLabel}>{formatTime(endTime)}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <TouchableOpacity activeOpacity={0.9} onPress={handleSave} style={styles.addBtnWrap}>
-              <LinearGradient colors={["#FF5A4A", "#FFB84E"]} style={styles.addBtn} start={{x:0,y:0}} end={{x:1,y:0}}>
-                <Text style={styles.addBtnText}>Save Changes</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
+          </ScrollView>
         </View>
       </TouchableWithoutFeedback>
     </Modal>

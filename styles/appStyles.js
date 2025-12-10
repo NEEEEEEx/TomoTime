@@ -290,6 +290,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center' ,
+    width: '100%',
   },
 
   cardTitle: { 
@@ -297,6 +298,7 @@ const styles = StyleSheet.create({
     fontWeight: '700', 
     color: '#FFBE5B',
     fontFamily: 'Quicksand-Bold',
+    width: '80%',
   },
 
   rightIcons: { 
@@ -360,6 +362,20 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
+  //=================================//
+
+  //========== Profile Menu ==========//
+  profileMenu: {
+    position: 'absolute', // This makes it float
+    top: 60, // Adjust distance from top to align with profile icon
+    right: 5, // Align with right margin
+    backgroundColor: '#b91c1c', // The deep red color
+    borderRadius: 10,
+    paddingVertical: 5,
+    width: 150,
+    elevation: 10,
+    zIndex: 100, // Forces it to be on top of everything else
+  },
 
   //========= Chat AI Screen: Hero & Chat Layout =========//
   chatHeroWrap: {
@@ -394,74 +410,16 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 10,
   },
-  //============================================//
-
-  //========= Chat AI Screen: Messages =========//
-  chatMessageRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    marginVertical: 6,
-  },
-  chatAvatarWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    justifyContent: 'center',
+  emptyChatWindow: {
+    flex: 50,
     alignItems: 'center',
-    marginRight: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 3,
-    elevation: 3,
+    justifyContent: 'center',
+    opacity: 0.3,
   },
-  chatAvatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-  },
-  chatBubble: {
-    maxWidth: '78%',
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  chatBotBubble: {
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-  },
-  chatUserBubble: {
-    backgroundColor: '#e48f27',
-    borderTopRightRadius: 4,
-  },
-  chatBubbleText: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  chatBotText: {
-    color: '#2d0c08',
+  emptyChatWindowText:{
+    marginTop: 10,
+    color: '#2e0000',
     fontFamily: 'Quicksand-Medium',
-  },
-  chatUserText: {
-    color: '#ffffff',
-    fontFamily: 'Quicksand-Bold',
-  },
-  chatPillBubble: {
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    minWidth: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chatPillText: {
-    fontSize: 15,
-    fontFamily: 'Quicksand-Bold',
   },
   //============================================//
 

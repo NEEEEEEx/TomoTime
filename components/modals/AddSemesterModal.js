@@ -12,6 +12,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import styles from '../../styles/modalStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AddSemesterModal({visible, onClose, onAdd}) {
   const [title, setTitle] = useState('');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -22,7 +22,32 @@ import EditSemesterModal from '../components/modals/EditSemesterModal';
 import EditClassScheduleModal from '../components/modals/EditClassScheduleModal';
 import EditFreeTimeModal from '../components/modals/EditFreeTimeModal';
 import ScheduleImporter from '../components/ScheduleImporter'; // Added ScheduleImporter import
+import { 
+  saveSemesterPreferences, 
+  saveClassSchedule, 
+  saveFreeTime,
+  getSemesterPreferences,
+  getClassSchedule,
+  getFreeTime,
+  saveSemesters,
+  getSemesters,
+  saveSelectedSemester,
+  getSelectedSemester,
+  saveClassScheduleForSemester,
+  saveFreeTimeForSemester,
+  getClassScheduleForSemester,
+  getFreeTimeForSemester,
+  updateStepValidation,
+  getMultiStepValidation
+} from '../utils/userPreferences';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AuthContext } from '../context/AuthContext';
 
+
+//========= ASYNC STORAGE KEYS ===========//
+const SEMESTERS_KEY = '@TomoTime:semester_key';
+const CLASSES_KEY = '@TomoTime:classes_key';
+const FREE_TIME_KEY = '@TomoTime:free_time_key';
 
 //========= STEP  INDICATOR ==========//
 const steps = [
@@ -65,33 +90,222 @@ const stepsIndicatorStyles = {
 };
 //==================================//
 
-
 export default function MultiStep({ navigation, route}) {
-  // =========== Use States ============ //
+
+  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
+  const { signOut } = useContext(AuthContext);
+  const [semesters, setSemesters] = useState([]); //initialize as empty arrays
+  const [classes, setClasses] = useState([]);
+  const [freeTime, setFreeTime] = useState([]);
   const [currentPosition, setCurrentPosition] = useState(0);// Step Indicator Posistion
   const [addModalVisible, setAddModalVisible] = useState(false); // Add New Item Modal Visibility
   const [editModalVisible, setEditModalVisible] = useState(false); // Edit Item Modal Visibility
   const [itemToEdit, setItemToEdit] = useState(null); // currently editing item
   const [importModalVisible, setImportModalVisible] = useState(false); // State for AI Importer Modal
   // =================================== //
-  
-  //=========== Sample Data for Each Step ===========//
-  const [semesters, setSemesters] = useState([
-    { id: '1', title: 'Semester 2025-2026', study: '60 min.', break: '15 min.', selected: true },
-    { id: '2', title: 's.y. 2024-2025', study: '40 min.', break: '10 min.', selected: false },
-    { id: '3', title: 'Sem 2023-2024', study: '40 min.', break: '10 min.', selected: false },
-  ]);
+  const [loading, setLoading] = useState(true);
+  const [stepValidation, setStepValidation] = useState({
+    step0Complete: false,
+    step1Complete: false,
+    step2Complete: false
+  });
+  const { completeMultiStep } = useContext(AuthContext);
 
+  //=========== Profile Menu ============//
+    const toggleProfileMenu = () => {
+      setProfileMenuVisible(!profileMenuVisible);
+    }
   
-  const [classes, setClasses] = useState([
-    { id: '1', title: 'IIT415 - Software Engineer', day: 'Tuesday, Thursday', time: '7:30 - 9:00' },
-    { id: '2', title: 'IIT414 - Mob. Prog.', day: 'Saturday', time: '7:30 - 12:30' },
-  ]);
+    const handleLogout = async () => {
+      setProfileMenuVisible(false);
+      Alert.alert(
+        'Log Out',
+        'Are you sure you want to log out?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          },
+          {
+            text: 'Log Out',
+            onPress: async () => {
+              await signOut();
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Welcome' }],
+              });
+            },
+            style: 'destructive'
+          }
+        ]
+      );
+    }
+    //===================================//
+ 
+
+  //====== ASYNC STORAGE FUNCS -======//
+
+  const storeData = async (key, value) => {
+    try {
+      const asyncValue = JSON.stringify(value);
+      await AsyncStorage.setItem(key, asyncValue);
+      console.log(`Data stored in key success: ${key}`); //checks if json value is stored in asyncStorage
+    } catch (error) {
+      console.error(`Error saving data for: ${key}`, error);
+    }
+  };
+
+  const getData = async (key, fallbackData) => {
+    try {
+      const asyncValue = await AsyncStorage.getItem(key);
+      if (asyncValue != null) {
+        return JSON.parse(asyncValue);
+      } else {
+        return fallbackData; //if there is nothing in storage use sample data
+      }
+    } catch (error) {
+      console.error(`Error reading data for: ${key}`, error);
+      return fallbackData;
+    }
+  };
   
-  const [freeTime, setFreeTime] = useState([
-    { id: '1', title: 'Monday, Wednesday', time: '7:30 - 9:00' },
-    { id: '2', title: 'Friday', time: '14:00 - 18:00' },
-  ]);
+
+  //=========== Sample Data for Each Step ===========//
+  
+  useEffect(() => {
+    const loadData = async () => {
+    // Load validation state
+    const validation = await getMultiStepValidation();
+    setStepValidation(validation);
+    
+    // Load semesters from storage system
+    const savedSemesters = await getSemesters();
+    if (savedSemesters && savedSemesters.length > 0) {
+      setSemesters(savedSemesters);
+      
+      // Load classes and free time for selected semester
+      const selectedSemester = savedSemesters.find(s => s.selected);
+      if (selectedSemester) {
+        const semesterClasses = await getClassScheduleForSemester(selectedSemester.id);
+        const semesterFreeTime = await getFreeTimeForSemester(selectedSemester.id);
+        
+        setClasses(semesterClasses);
+        setFreeTime(semesterFreeTime);
+      } else {
+        // No semester selected, load from general storage
+        const storedClasses = await getData(CLASSES_KEY, []);
+        const storedFreeTime = await getData(FREE_TIME_KEY, []);
+        setClasses(storedClasses);
+        setFreeTime(storedFreeTime);
+      }
+    } else {
+      // No semesters exist - start with empty arrays
+      setSemesters([]);
+      setClasses([]);
+      setFreeTime([]);
+    }
+
+    setLoading(false);
+  };
+    loadData();
+}, []);
+
+  //save semesters
+  useEffect(() => {
+    if (!loading)
+    {
+      storeData(SEMESTERS_KEY, semesters);
+      saveSemesters(semesters);
+      
+      // Update step 0 validation if a semester is selected
+      const hasSelectedSemester = semesters.some(s => s.selected);
+      if (hasSelectedSemester && !stepValidation.step0Complete) {
+        updateStepValidation(0, true).then(validation => {
+          if (validation) setStepValidation(validation);
+        });
+      }
+    }
+
+  }, [semesters, loading]);
+
+  //save classes
+  useEffect(() => {
+    if (!loading) {
+      storeData(CLASSES_KEY, classes);
+      
+      // Save to selected semester
+      const selectedSemester = semesters.find(s => s.selected);
+      if (selectedSemester) {
+        saveClassScheduleForSemester(selectedSemester.id, classes);
+        
+        // Update step 1 validation if classes exist
+        if (classes.length > 0 && !stepValidation.step1Complete) {
+          updateStepValidation(1, true).then(validation => {
+            if (validation) setStepValidation(validation);
+          });
+        }
+      }
+    }
+  }, [classes, loading]);
+  
+    //freetime
+  useEffect(() => {
+    if (!loading) {
+      storeData(FREE_TIME_KEY, freeTime);
+      
+      // Save to selected semester
+      const selectedSemester = semesters.find(s => s.selected);
+      if (selectedSemester) {
+        saveFreeTimeForSemester(selectedSemester.id, freeTime);
+        
+        // Update step 2 validation if free time exists
+        if (freeTime.length > 0 && !stepValidation.step2Complete) {
+          updateStepValidation(2, true).then(validation => {
+            if (validation) setStepValidation(validation);
+          });
+        }
+      }
+    }
+  }, [freeTime, loading]);
+  //===========End of async storage funcs==========//
+
+
+  //=========== Load Data from AsyncStorage on Mount ===========//
+  useEffect(() => {
+    (async () => {
+      const savedSemester = await getSemesterPreferences();
+      const savedClasses = await getClassSchedule();
+      const savedFreeTime = await getFreeTime();
+
+      if (savedClasses && savedClasses.length > 0) {
+        setClasses(savedClasses);
+      }
+      
+      if (savedFreeTime && savedFreeTime.length > 0) {
+        setFreeTime(savedFreeTime);
+      }
+    })();
+  }, []);
+
+  //=========== Save Data to AsyncStorage when it changes ===========//
+  useEffect(() => {
+    const selectedSemester = semesters.find(s => s.selected);
+    if (selectedSemester) {
+      saveSemesterPreferences(selectedSemester);
+    }
+  }, [semesters]);
+
+  useEffect(() => {
+    if (classes.length > 0) {
+      saveClassSchedule(classes);
+    }
+  }, [classes]);
+
+  useEffect(() => {
+    if (freeTime.length > 0) {
+      saveFreeTime(freeTime);
+    }
+  }, [freeTime]);
   //================================================//
 
   //=========== Use Effect for Route Params ===========//
@@ -107,13 +321,56 @@ export default function MultiStep({ navigation, route}) {
   //================================================//
   
   //============ Steps Navigation ============//
-  const goNext = () => {
+  const goNext = async () => {
+    // Validation for Step 0 (Semester)
+    if (currentPosition === 0) {
+      const hasSelectedSemester = semesters.some(s => s.selected);
+      if (!hasSelectedSemester) {
+        Alert.alert(
+          'Semester Required',
+          'Please create and select a semester before proceeding.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+    }
+    
+    // Validation for Step 1 (Classes)
+    if (currentPosition === 1) {
+      if (classes.length === 0) {
+        Alert.alert(
+          'Class Schedule Required',
+          'Please add at least one class to your schedule before proceeding.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+    }
+    
+    // Validation for Step 2 (Free Time)
+    if (currentPosition === 2) {
+      if (freeTime.length === 0) {
+        Alert.alert(
+          'Free Time Required',
+          'Please add at least one free time slot before proceeding.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+      
+      // All steps complete - mark MultiStep as done and navigate
+      console.log('All steps complete! Navigating to CalendarPage');
+      await completeMultiStep();
+      navigation.replace('CalendarPage');
+      return;
+    }
+    
+    // Move to next step
     if (currentPosition < 2) {
       setCurrentPosition(currentPosition + 1);
-    } else {
-      console.log('Submit Form. Navigate to Main Page')// Handle Form Submission Here
     }
   };
+  
   const goBack = () => {
     if (currentPosition > 0) {
       setCurrentPosition(currentPosition - 1);
@@ -146,14 +403,37 @@ export default function MultiStep({ navigation, route}) {
 
 
   //============ Semester Handlers
-  const handleSelectSemester = (id) => { 
+  const handleSelectSemester = async (id) => { 
     setSemesters(prev => 
-    prev.map(sem => ({ ...sem, selected: sem.id === id })) 
-    ); 
+      prev.map(sem => ({ ...sem, selected: sem.id === id })) 
+    );
+    
+    // Save selected semester
+    await saveSelectedSemester(id);
+    
+    // Load classes and free time for this semester
+    const semesterClasses = await getClassScheduleForSemester(id);
+    const semesterFreeTime = await getFreeTimeForSemester(id);
+    
+    setClasses(semesterClasses);
+    setFreeTime(semesterFreeTime);
   };
 
   const handleAddSemester = (payload) => {
-    setSemesters(prev => [{ id: Date.now(), ...payload }, ...prev]);
+    try {
+      const newSemester = { 
+        id: Date.now(), 
+        title: payload.title || 'New Semester',
+        study: payload.study || 0,
+        break: payload.break || 0,
+        selected: false 
+      };
+      setSemesters(prev => [newSemester, ...prev]);
+      setAddModalVisible(false);
+    } catch (error) {
+      console.error('Error adding semester:', error);
+      Alert.alert('Error', 'Failed to add semester. Please try again.');
+    }
   };
 
   const handleDeleteSemester = (id) => {
@@ -223,13 +503,19 @@ export default function MultiStep({ navigation, route}) {
 
   // =========================================================== //
 
+    
   // 1. Render Semester Card (Selectable)
   const renderSemesterItem = ({ item }) => {
+    const studyTime = String(item.study).includes('min') ? item.study : `${item.study} min.`;
+    const breakTime = String(item.break).includes('min') ? item.break : `${item.break} min.`;
     const isSelected = item.selected;
     return (
       <TouchableOpacity activeOpacity={0.9} onPress={() => handleSelectSemester(item.id)}>
         <LinearGradient
-          colors={isSelected ? ['#be1c1c', '#f9aa32'] : ['#fffefc', '#fffefc']}
+          colors={isSelected ? ['#be1c1c', '#f9aa32'] : 
+            ['#fffefc', '#fffefc']}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 1, y: 0 }}
           style={[styles.cardWrapper, isSelected && styles.cardSelected]} // Ensure styles.cardSelected exists or remove
         >
           <View style={styles.cardHeaderRow}>
@@ -254,7 +540,9 @@ export default function MultiStep({ navigation, route}) {
             </View>
           </View>
           <View style={styles.cardBody}>
-            <Text style={[styles.timeLabel, isSelected && { color: 'white' }]}>Study: {item.study} | Break: {item.break}</Text>
+            <Text style={[styles.timeLabel, isSelected && { color: 'white' }]}>
+              Study: {studyTime} | Break: {breakTime}
+              </Text>
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -289,7 +577,7 @@ export default function MultiStep({ navigation, route}) {
           Day: {item.day}
         </Text>
         <Text style={{ color: '#333' }}>
-          Time: {item.time}
+          Time: {item.startTime} - {item.endTime}
         </Text>
       </View>
     </View>
@@ -319,7 +607,9 @@ export default function MultiStep({ navigation, route}) {
          </View>
       </View>
       <View style={{ marginTop: 5 }}>
-        <Text style={{ color: '#333' }}>Time: {item.time}</Text>
+        <Text style={{ color: '#333' }}>
+          Time: {item.startTime} - {item.endTime}
+        </Text>
       </View>
     </View>
   );
@@ -376,7 +666,7 @@ export default function MultiStep({ navigation, route}) {
         </View>
 
         {/* ----- Profile Circle ----- */}
-        <TouchableOpacity>
+        <TouchableOpacity onPress={toggleProfileMenu}>
           <LinearGradient
             colors={['#FF5F6D', '#FFC371']} // Your gradient colors
             start={{ x: 0, y: 1 }}
@@ -387,6 +677,16 @@ export default function MultiStep({ navigation, route}) {
           </LinearGradient>  
         </TouchableOpacity>
         {/* ----- End of Profile Circle ----- */}
+
+        {profileMenuVisible && (
+          <View style={styles.profileMenu}>
+            <TouchableOpacity 
+              style={styles.menuItem}
+              onPress={handleLogout}>
+              <Text style={styles.menuText}>Log out</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
       {/* -------- End of Header -------- */}
 
@@ -525,4 +825,4 @@ export default function MultiStep({ navigation, route}) {
 
     </ImageBackground>
   );
-}
+};

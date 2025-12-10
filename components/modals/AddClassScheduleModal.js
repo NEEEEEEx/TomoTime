@@ -12,27 +12,67 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { SelectList } from 'react-native-dropdown-select-list';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import styles from '../../styles/modalStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AddClassScheduleModal({visible, onClose, onAdd}) {
   const [title, setTitle] = useState('');
   const [day, setDay] = useState(null);
-  const [startTime, setStartTime] = useState('00:00');
-  const [endTime, setEndTime] = useState('00:00');
+  const [startTime, setStartTime] = useState(new Date());
+  const [endTime, setEndTime] = useState(new Date());
+
+    const DAY = {
+      '1': 'Monday',
+      '2': 'Tuesday',
+      '3': 'Wednesday',
+      '4': 'Thursday',
+      '5': 'Friday',
+      '6': 'Saturday',
+      '7': 'Sunday',
+    };
+
+  const formatTime = (date) => {
+    if (!date || isNaN(date.getTime())) return '12:00 AM';
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  };
+
+  const openStartTimePicker = () => {
+    DateTimePickerAndroid.open({
+      value: startTime,
+      onChange: (event, selectedTime) => {
+        if (selectedTime) setStartTime(selectedTime);
+      },
+      mode: 'time',
+      is24Hour: false
+    });
+  };
+
+  const openEndTimePicker = () => {
+    DateTimePickerAndroid.open({
+      value: endTime,
+      onChange: (event, selectedTime) => {
+        if (selectedTime) setEndTime(selectedTime);
+      },
+      mode: 'time',
+      is24Hour: false
+    });
+  };
 
   function handleAdd() {
+    const dayName = DAY[day] || 'Unknown Day';
     const payload = {
       title: title || 'Untitled Class',
-      day: day || new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-      startTime: parseInt(startTime, 10) || 0,
-      endTime: parseInt(endTime, 10) || 0,
+      day: dayName,
+      startTime: formatTime(startTime),
+      endTime: formatTime(endTime),
     };
     if (onAdd) onAdd(payload);
     // reset
     setTitle('');
     setDay('');
-    setStartTime('00:00');
-    setEndTime('00:00');
+    setStartTime(new Date());
+    setEndTime(new Date());
     onClose();
   }
 
@@ -85,23 +125,15 @@ export default function AddClassScheduleModal({visible, onClose, onAdd}) {
             <View style={styles.rowInputs}>
               <View style={styles.smallInputWrap}>
                 <Text style={styles.smallLabel}>Start Time </Text>
-                <TextInput
-                  value={startTime}
-                  onChangeText={setStartTime}
-                  keyboardType="numeric"
-                  style={styles.smallInput}
-                  maxLength={2}
-                />
+                <TouchableOpacity style={styles.smallInput} onPress={openStartTimePicker}>
+                  <Text style={styles.smallLabel}>{formatTime(startTime)}</Text>
+                </TouchableOpacity>
               </View>
               <View style={styles.smallInputWrap}>
                 <Text style={styles.smallLabel}>End Time</Text>
-                <TextInput
-                  value={endTime}
-                  onChangeText={setEndTime}
-                  keyboardType="numeric"
-                  style={styles.smallInput}
-                  maxLength={2}
-                />
+                <TouchableOpacity style={styles.smallInput} onPress={openEndTimePicker}>
+                  <Text style={styles.smallLabel}>{formatTime(endTime)}</Text>
+                </TouchableOpacity>
               </View>
             </View>
 
