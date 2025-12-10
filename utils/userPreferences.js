@@ -1,12 +1,13 @@
 // User preferences and schedule storage
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserData, setUserData } from './userStorage';
 
-// Storage keys
-const SEMESTERS_KEY = '@TomoTime:semesters';
-const SELECTED_SEMESTER_KEY = '@TomoTime:selected_semester';
-const MULTISTEP_VALIDATION_KEY = '@TomoTime:multistep_validation';
+// Storage keys (will be prefixed with user ID automatically)
+const SEMESTERS_KEY = 'semesters';
+const SELECTED_SEMESTER_KEY = 'selected_semester';
+const MULTISTEP_VALIDATION_KEY = 'multistep_validation';
 
-// Legacy keys for backward compatibility
+// Legacy keys for backward compatibility (also will be user-specific)
 const SEMESTER_KEY = 'userSemester';
 const CLASSES_KEY = 'userClasses';
 const FREETIME_KEY = 'userFreeTime';
@@ -14,7 +15,7 @@ const FREETIME_KEY = 'userFreeTime';
 // ============= Semester Management ============= //
 export const saveSemesters = async (semesters) => {
   try {
-    await AsyncStorage.setItem(SEMESTERS_KEY, JSON.stringify(semesters));
+    await setUserData(SEMESTERS_KEY, semesters);
   } catch (error) {
     console.error('Failed to save semesters:', error);
   }
@@ -22,8 +23,8 @@ export const saveSemesters = async (semesters) => {
 
 export const getSemesters = async () => {
   try {
-    const saved = await AsyncStorage.getItem(SEMESTERS_KEY);
-    return saved ? JSON.parse(saved) : [];
+    const saved = await getUserData(SEMESTERS_KEY);
+    return saved ? saved : [];
   } catch (error) {
     console.error('Failed to load semesters:', error);
     return [];
@@ -49,7 +50,7 @@ export const saveSelectedSemester = async (semesterId) => {
       selected: sem.id === semesterId
     }));
     await saveSemesters(updatedSemesters);
-    await AsyncStorage.setItem(SELECTED_SEMESTER_KEY, String(semesterId));
+    await setUserData(SELECTED_SEMESTER_KEY, String(semesterId));
   } catch (error) {
     console.error('Failed to save selected semester:', error);
   }
@@ -57,13 +58,13 @@ export const saveSelectedSemester = async (semesterId) => {
 
 // ============= Semester-based Data (Classes & Free Time) ============= //
 const getSemesterDataKey = (semesterId, type) => {
-  return `@TomoTime:semester_${semesterId}_${type}`;
+  return `semester_${semesterId}_${type}`;
 };
 
 export const saveClassScheduleForSemester = async (semesterId, classes) => {
   try {
     const key = getSemesterDataKey(semesterId, 'classes');
-    await AsyncStorage.setItem(key, JSON.stringify(classes));
+    await setUserData(key, classes);
   } catch (error) {
     console.error('Failed to save class schedule for semester:', error);
   }
@@ -72,8 +73,8 @@ export const saveClassScheduleForSemester = async (semesterId, classes) => {
 export const getClassScheduleForSemester = async (semesterId) => {
   try {
     const key = getSemesterDataKey(semesterId, 'classes');
-    const saved = await AsyncStorage.getItem(key);
-    return saved ? JSON.parse(saved) : [];
+    const saved = await getUserData(key);
+    return saved ? saved : [];
   } catch (error) {
     console.error('Failed to load class schedule for semester:', error);
     return [];
@@ -83,7 +84,7 @@ export const getClassScheduleForSemester = async (semesterId) => {
 export const saveFreeTimeForSemester = async (semesterId, freeTime) => {
   try {
     const key = getSemesterDataKey(semesterId, 'freetime');
-    await AsyncStorage.setItem(key, JSON.stringify(freeTime));
+    await setUserData(key, freeTime);
   } catch (error) {
     console.error('Failed to save free time for semester:', error);
   }
@@ -92,8 +93,8 @@ export const saveFreeTimeForSemester = async (semesterId, freeTime) => {
 export const getFreeTimeForSemester = async (semesterId) => {
   try {
     const key = getSemesterDataKey(semesterId, 'freetime');
-    const saved = await AsyncStorage.getItem(key);
-    return saved ? JSON.parse(saved) : [];
+    const saved = await getUserData(key);
+    return saved ? saved : [];
   } catch (error) {
     console.error('Failed to load free time for semester:', error);
     return [];
@@ -103,7 +104,7 @@ export const getFreeTimeForSemester = async (semesterId) => {
 // ============= Legacy Support (for current AI integration) ============= //
 export const saveSemesterPreferences = async (semester) => {
   try {
-    await AsyncStorage.setItem(SEMESTER_KEY, JSON.stringify(semester));
+    await setUserData(SEMESTER_KEY, semester);
   } catch (error) {
     console.error('Failed to save semester preferences:', error);
   }
@@ -127,7 +128,7 @@ export const getSemesterPreferences = async () => {
 
 export const saveClassSchedule = async (classes) => {
   try {
-    await AsyncStorage.setItem(CLASSES_KEY, JSON.stringify(classes));
+    await setUserData(CLASSES_KEY, classes);
     
     // Also save to selected semester
     const selectedSemester = await getSelectedSemester();
@@ -158,7 +159,7 @@ export const getClassSchedule = async () => {
 
 export const saveFreeTime = async (freeTime) => {
   try {
-    await AsyncStorage.setItem(FREETIME_KEY, JSON.stringify(freeTime));
+    await setUserData(FREETIME_KEY, freeTime);
     
     // Also save to selected semester
     const selectedSemester = await getSelectedSemester();
@@ -278,7 +279,7 @@ export const formatScheduleForAI = async () => {
 // ============= MultiStep Validation ============= //
 export const saveMultiStepValidation = async (validationData) => {
   try {
-    await AsyncStorage.setItem(MULTISTEP_VALIDATION_KEY, JSON.stringify(validationData));
+    await setUserData(MULTISTEP_VALIDATION_KEY, validationData);
   } catch (error) {
     console.error('Failed to save MultiStep validation:', error);
   }
@@ -286,8 +287,8 @@ export const saveMultiStepValidation = async (validationData) => {
 
 export const getMultiStepValidation = async () => {
   try {
-    const saved = await AsyncStorage.getItem(MULTISTEP_VALIDATION_KEY);
-    return saved ? JSON.parse(saved) : {
+    const saved = await getUserData(MULTISTEP_VALIDATION_KEY);
+    return saved ? saved : {
       step0Complete: false,
       step1Complete: false,
       step2Complete: false
@@ -326,7 +327,11 @@ export const isMultiStepComplete = async () => {
 
 export const resetMultiStepValidation = async () => {
   try {
-    await AsyncStorage.removeItem(MULTISTEP_VALIDATION_KEY);
+    await setUserData(MULTISTEP_VALIDATION_KEY, {
+      step0Complete: false,
+      step1Complete: false,
+      step2Complete: false
+    });
   } catch (error) {
     console.error('Failed to reset MultiStep validation:', error);
   }

@@ -1,18 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatScheduleForAI } from './userPreferences';
+import { getUserData, setUserData } from './userStorage';
  
 
 const STORAGE_KEY = 'conversationHistory';
  let conversation = [];
 
  const persist = async () => {
-   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(conversation));
+   await setUserData(STORAGE_KEY, conversation);
  };
 
  export const loadConversation = async () => {
-   const saved = await AsyncStorage.getItem(STORAGE_KEY);
+   const saved = await getUserData(STORAGE_KEY);
    if (saved) {
-     conversation = JSON.parse(saved);
+     conversation = saved;
      return conversation;
    }
    await resetConversation(); // ensures system message seeded

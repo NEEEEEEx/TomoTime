@@ -18,17 +18,22 @@ import styles from '../styles/appStyles';
 import { TaskContext } from '../context/TaskContext';
 import { AuthContext } from '../context/AuthContext';
 import EditTaskModal from '../components/modals/EditTaskModal';
+import { getUserData } from '../utils/userStorage';
+import { useFocusEffect } from '@react-navigation/native';
+
+const PROFILE_PICTURE_KEY = 'profile_picture';
 
 
 export default function CalendarPage () {
   const navigation = useNavigation();
   const { tasks, loadTasks, updateTask, deleteTask } = useContext(TaskContext);
-  const { signOut } = useContext(AuthContext);
+  const { signOut, user } = useContext(AuthContext);
   const [selectedDate, setSelectedDate] = useState('');
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [itemToEdit, setItemToEdit] = useState(null);
   const [burgerMenuVisible, setBurgerMenuVisible] = useState(false);
   const [profileMenuVisible, setProfileMenuVisible] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
 
   // Load tasks on component mount
   useEffect(() => {
@@ -39,11 +44,28 @@ export default function CalendarPage () {
     })();
   }, []);
 
-  // Reload tasks when screen gains focus (e.g., after adding tasks from ChatAi)
+  // Load profile picture
+  const loadProfilePicture = async () => {
+    try {
+      const picture = await getUserData(PROFILE_PICTURE_KEY);
+      if (picture) {
+        setProfilePicture(picture);
+      } else if (user?.user?.photo) {
+        setProfilePicture(user.user.photo);
+      } else {
+        setProfilePicture(null);
+      }
+    } catch (error) {
+      console.error('Error loading profile picture:', error);
+    }
+  };
+
+  // Reload tasks and profile picture when screen gains focus
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
       console.log('CalendarPage: Screen focused, reloading tasks');
       await loadTasks();
+      await loadProfilePicture();
       console.log('CalendarPage: Tasks reloaded, count:', tasks.length);
     });
 
@@ -65,6 +87,11 @@ export default function CalendarPage () {
   //=========== Profile Menu ============//
   const toggleProfileMenu = () => {
     setProfileMenuVisible(!profileMenuVisible);
+  }
+
+  const handleProfile = () => {
+    setProfileMenuVisible(false);
+    navigation.navigate('ProfilePage');
   }
 
   const handleLogout = async () => {
@@ -389,13 +416,21 @@ export default function CalendarPage () {
                 end={{ x: 1, y: 0 }}
                 style={styles.gradientContainer}
               >
-                  <Image source={require('../assests/images/default-profile.jpg')} style={styles.profileCircle} />
+                  <Image 
+                    source={profilePicture ? { uri: profilePicture } : require('../assests/images/default-profile.jpg')} 
+                    style={styles.profileCircle} 
+                  />
               </LinearGradient>  
             </TouchableOpacity>
             
             {/* ---------- Profile Menu Dropdown ---------- */}
             {profileMenuVisible && (
               <View style={styles.profileMenu}>
+                <TouchableOpacity 
+                  style={styles.menuItem}
+                  onPress={handleProfile}>
+                  <Text style={styles.menuText}>Profile</Text>
+                </TouchableOpacity>
                 <TouchableOpacity 
                   style={styles.menuItem}
                   onPress={handleLogout}>
