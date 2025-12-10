@@ -1,5 +1,6 @@
 import React, { createContext, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserData, setUserData } from '../utils/userStorage';
 
 export const TaskContext = createContext();
 
@@ -11,9 +12,9 @@ export const TaskProvider = ({ children }) => {
   // Initialize tasks from storage
   const loadTasks = useCallback(async () => {
     try {
-      const saved = await AsyncStorage.getItem(TASKS_STORAGE_KEY);
+      const saved = await getUserData(TASKS_STORAGE_KEY);
       if (saved) {
-        setTasks(JSON.parse(saved));
+        setTasks(saved);
       }
     } catch (error) {
       console.error('Failed to load tasks:', error);
@@ -23,7 +24,7 @@ export const TaskProvider = ({ children }) => {
   // Persist tasks to storage
   const persistTasks = useCallback(async (updatedTasks) => {
     try {
-      await AsyncStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(updatedTasks));
+      await setUserData(TASKS_STORAGE_KEY, updatedTasks);
       setTasks(updatedTasks);
     } catch (error) {
       console.error('Failed to persist tasks:', error);
@@ -40,7 +41,7 @@ export const TaskProvider = ({ children }) => {
     setTasks(prevTasks => {
       const updatedTasks = [...prevTasks, newTask];
       // Persist asynchronously without blocking
-      AsyncStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(updatedTasks)).catch(error => {
+      setUserData(TASKS_STORAGE_KEY, updatedTasks).catch(error => {
         console.error('Failed to persist tasks:', error);
       });
       return updatedTasks;

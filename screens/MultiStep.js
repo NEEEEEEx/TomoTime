@@ -42,12 +42,14 @@ import {
 } from '../utils/userPreferences';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../context/AuthContext';
-
+import { getUserData, setUserData } from '../utils/userStorage';
+import { useFocusEffect } from '@react-navigation/native';
 
 //========= ASYNC STORAGE KEYS ===========//
-const SEMESTERS_KEY = '@TomoTime:semester_key';
-const CLASSES_KEY = '@TomoTime:classes_key';
-const FREE_TIME_KEY = '@TomoTime:free_time_key';
+const SEMESTERS_KEY = 'semester_key';
+const CLASSES_KEY = 'classes_key';
+const FREE_TIME_KEY = 'free_time_key';
+const PROFILE_PICTURE_KEY = 'profile_picture';
 
 //========= STEP  INDICATOR ==========//
 const steps = [
@@ -93,7 +95,8 @@ const stepsIndicatorStyles = {
 export default function MultiStep({ navigation, route}) {
 
   const [profileMenuVisible, setProfileMenuVisible] = useState(false);
-  const { signOut } = useContext(AuthContext);
+  const { signOut, user } = useContext(AuthContext);
+  const [profilePicture, setProfilePicture] = useState(null);
   const [semesters, setSemesters] = useState([]); //initialize as empty arrays
   const [classes, setClasses] = useState([]);
   const [freeTime, setFreeTime] = useState([]);
@@ -116,6 +119,11 @@ export default function MultiStep({ navigation, route}) {
       setProfileMenuVisible(!profileMenuVisible);
     }
   
+    const handleProfile = () => {
+      setProfileMenuVisible(false);
+      navigation.navigate('ProfilePage');
+    }
+
     const handleLogout = async () => {
       setProfileMenuVisible(false);
       Alert.alert(
@@ -141,14 +149,37 @@ export default function MultiStep({ navigation, route}) {
       );
     }
     //===================================//
+
+  // Load profile picture
+  const loadProfilePicture = async () => {
+    try {
+      const picture = await getUserData(PROFILE_PICTURE_KEY);
+      if (picture) {
+        setProfilePicture(picture);
+      } else if (user?.user?.photo) {
+        setProfilePicture(user.user.photo);
+      } else {
+        setProfilePicture(null);
+      }
+    } catch (error) {
+      console.error('Error loading profile picture:', error);
+    }
+  };
+
+  // Reload profile picture when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadProfilePicture();
+    }, [user])
+  );
+  //===================================//
  
 
   //====== ASYNC STORAGE FUNCS -======//
 
   const storeData = async (key, value) => {
     try {
-      const asyncValue = JSON.stringify(value);
-      await AsyncStorage.setItem(key, asyncValue);
+      await setUserData(key, value);
       console.log(`Data stored in key success: ${key}`); //checks if json value is stored in asyncStorage
     } catch (error) {
       console.error(`Error saving data for: ${key}`, error);
@@ -157,9 +188,9 @@ export default function MultiStep({ navigation, route}) {
 
   const getData = async (key, fallbackData) => {
     try {
-      const asyncValue = await AsyncStorage.getItem(key);
+      const asyncValue = await getUserData(key);
       if (asyncValue != null) {
-        return JSON.parse(asyncValue);
+        return asyncValue;
       } else {
         return fallbackData; //if there is nothing in storage use sample data
       }
@@ -668,18 +699,26 @@ export default function MultiStep({ navigation, route}) {
         {/* ----- Profile Circle ----- */}
         <TouchableOpacity onPress={toggleProfileMenu}>
           <LinearGradient
-            colors={['#FF5F6D', '#FFC371']} // Your gradient colors
+            colors={['#FF5F6D', '#FFC371']}
             start={{ x: 0, y: 1 }}
             end={{ x: 1, y: 0 }}
             style={styles.gradientContainer}
           >
-              <Image source={require('../assests/images/default-profile.jpg')} style={styles.profileCircle} />
+              <Image 
+                source={profilePicture ? { uri: profilePicture } : require('../assests/images/default-profile.jpg')} 
+                style={styles.profileCircle} 
+              />
           </LinearGradient>  
         </TouchableOpacity>
         {/* ----- End of Profile Circle ----- */}
 
         {profileMenuVisible && (
           <View style={styles.profileMenu}>
+            <TouchableOpacity 
+              style={styles.menuItem}
+              onPress={handleProfile}>
+              <Text style={styles.menuText}>Profile</Text>
+            </TouchableOpacity>
             <TouchableOpacity 
               style={styles.menuItem}
               onPress={handleLogout}>

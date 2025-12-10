@@ -7,9 +7,11 @@ import Welcome from './screens/Welcome';
 import MultiStep from './screens/MultiStep';
 import CalendarPage from './screens/CalendarPage';
 import ChatAi from './screens/ChatAi';
+import ProfilePage from './screens/ProfilePage';
 import { TaskProvider } from './context/TaskContext';
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserData, setUserData } from './utils/userStorage';
 
 // Import the Provider
 import { AuthProvider, AuthContext } from './context/AuthContext'; 
@@ -26,7 +28,7 @@ const configureGoogleSignIn = () => {
 
 const Stack = createNativeStackNavigator();
 
-const NAVIGATION_STATE_KEY = '@TomoTime:navigation_state';
+const NAVIGATION_STATE_KEY = 'navigation_state';
 
 // Navigation component that has access to AuthContext
 const AppNavigator = () => {
@@ -38,10 +40,9 @@ const AppNavigator = () => {
   useEffect(() => {
     const restoreState = async () => {
       try {
-        const savedStateString = await AsyncStorage.getItem(NAVIGATION_STATE_KEY);
-        const state = savedStateString ? JSON.parse(savedStateString) : undefined;
+        const state = await getUserData(NAVIGATION_STATE_KEY);
 
-        if (state !== undefined) {
+        if (state !== undefined && state !== null) {
           setInitialState(state);
         }
       } catch (e) {
@@ -83,8 +84,10 @@ const AppNavigator = () => {
     <NavigationContainer
       initialState={initialState}
       onStateChange={(state) => {
-        // Save navigation state to AsyncStorage whenever it changes
-        AsyncStorage.setItem(NAVIGATION_STATE_KEY, JSON.stringify(state));
+        // Save navigation state using user-specific storage
+        setUserData(NAVIGATION_STATE_KEY, state).catch(error => {
+          console.error('Failed to save navigation state:', error);
+        });
       }}
     >
       <Stack.Navigator
@@ -121,6 +124,13 @@ const AppNavigator = () => {
         <Stack.Screen 
           name="ChatAi" 
           component={ChatAi} 
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="ProfilePage" 
+          component={ProfilePage} 
           options={{
             headerShown: false,
           }}

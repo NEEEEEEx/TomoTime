@@ -2,11 +2,12 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { setCurrentUserId, clearCurrentUserId, getUserData, setUserData, removeUserData } from '../utils/userStorage';
 
-// Storage keys
+// Storage keys (these will be prefixed with user ID automatically)
 const USER_KEY = '@TomoTime:user';
-const MULTISTEP_COMPLETE_KEY = '@TomoTime:multistep_complete';
-const NAVIGATION_STATE_KEY = '@TomoTime:navigation_state';
+const MULTISTEP_COMPLETE_KEY = 'multistep_complete';
+const NAVIGATION_STATE_KEY = 'navigation_state';
 
 // 1. Create the Context
 export const AuthContext = createContext();
@@ -26,7 +27,7 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoading(true);
       
-      // Check AsyncStorage for user data instead of using GoogleSignin
+      // Check AsyncStorage for user data (global, not user-specific)
       const isSignedIn = await AsyncStorage.getItem(USER_KEY);
       
       if (isSignedIn) {
@@ -34,9 +35,13 @@ export const AuthProvider = ({ children }) => {
         const userData = JSON.parse(isSignedIn);
         setUser(userData);
         
-        // Check if MultiStep is complete
-        const multiStepStatus = await AsyncStorage.getItem(MULTISTEP_COMPLETE_KEY);
-        setIsMultiStepComplete(multiStepStatus === 'true');
+        // Set the current user ID for user-specific storage
+        const userId = userData.user?.id || userData.id || userData.email;
+        setCurrentUserId(userId);
+        
+        // Check if MultiStep is complete (user-specific)
+        const multiStepStatus = await getUserData(MULTISTEP_COMPLETE_KEY);
+        setIsMultiStepComplete(multiStepStatus === true || multiStepStatus === 'true');
       }
     } catch (error) {
       console.error('Error loading user session:', error);
@@ -47,12 +52,17 @@ export const AuthProvider = ({ children }) => {
 
   const signIn = async (userInfo) => {
     try {
+      // Store user info globally (not user-specific)
       await AsyncStorage.setItem(USER_KEY, JSON.stringify(userInfo));
       setUser(userInfo);
       
-      // Check if user has completed MultiStep before
-      const multiStepStatus = await AsyncStorage.getItem(MULTISTEP_COMPLETE_KEY);
-      setIsMultiStepComplete(multiStepStatus === 'true');
+      // Set the current user ID for user-specific storage
+      const userId = userInfo.user?.id || userInfo.id || userInfo.email;
+      setCurrentUserId(userId);
+      
+      // Check if user has completed MultiStep before (user-specific)
+      const multiStepStatus = await getUserData(MULTISTEP_COMPLETE_KEY);
+      setIsMultiStepComplete(multiStepStatus === true || multiStepStatus === 'true');
     } catch (error) {
       console.error('Error signing in:', error);
     }
@@ -61,8 +71,13 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     try {
       await GoogleSignin.signOut();
+      
+      // Clear user-specific data (navigation state will be cleared with user-specific storage)
+      clearCurrentUserId();
+      
+      // Remove global user data
       await AsyncStorage.removeItem(USER_KEY);
-      await AsyncStorage.removeItem(NAVIGATION_STATE_KEY);
+      
       setUser(null);
       setIsMultiStepComplete(false);
     } catch (error) {
@@ -72,7 +87,7 @@ export const AuthProvider = ({ children }) => {
 
   const completeMultiStep = async () => {
     try {
-      await AsyncStorage.setItem(MULTISTEP_COMPLETE_KEY, 'true');
+      await setUserData(MULTISTEP_COMPLETE_KEY, 'true');
       setIsMultiStepComplete(true);
     } catch (error) {
       console.error('Error completing MultiStep:', error);

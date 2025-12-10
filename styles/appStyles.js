@@ -460,5 +460,131 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   //============================================//
+
+  //========= Profile Page Styles ==========//
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(255,255,255,0.3)',
+  },
+  profileScrollView: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  profileSection: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  profileGradientContainer: {
+    padding: 4,
+    borderRadius: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 120,
+    height: 120,
+    marginBottom: 16,
+  },
+  profileImageLarge: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+  },
+  profileName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2d0c08',
+    fontFamily: 'Quicksand-Bold',
+    marginBottom: 4,
+  },
+  profileEmail: {
+    fontSize: 14,
+    color: '#5e5d5d',
+    fontFamily: 'Quicksand-Regular',
+    marginBottom: 16,
+  },
+  changePhotoButton: {
+    backgroundColor: '#ffa526ff',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    elevation: 3,
+  },
+  changePhotoText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: 'Quicksand-SemiBold',
+  },
+  settingsSection: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 3,
+  },
+  settingsSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2d0c08',
+    fontFamily: 'Quicksand-Bold',
+    marginBottom: 12,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  settingItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  settingItemText: {
+    fontSize: 16,
+    color: '#2d0c08',
+    fontFamily: 'Quicksand-Regular',
+  },
+  dangerSection: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 16,
+    marginBottom: 30,
+    elevation: 3,
+  },
+  dangerSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#BE1C1C',
+    fontFamily: 'Quicksand-Bold',
+    marginBottom: 12,
+  },
+  deleteAccountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#BE1C1C',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    gap: 10,
+  },
+  deleteAccountText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'Quicksand-SemiBold',
+  },
+  //============================================//
 });
 export default styles;
