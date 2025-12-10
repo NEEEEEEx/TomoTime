@@ -20,10 +20,19 @@ import { AuthContext } from '../context/AuthContext.js';
 
 export default function Welcome ()  {
   const [userInfo, setUserInfo] = useState(null);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const navigation = useNavigation();
   const { signIn } = useContext(AuthContext);
 
   const handleSignIn = async () => {
+    // Prevent multiple simultaneous sign-in attempts
+    if (isSigningIn) {
+      console.log('Sign-in already in progress, ignoring duplicate press');
+      return;
+    }
+
+    setIsSigningIn(true);
+    
     try {
       await GoogleSignin.hasPlayServices(); 
       const userDetails = await GoogleSignin.signIn(); 
@@ -58,6 +67,8 @@ export default function Welcome ()  {
         Alert.alert('Sign-In Error', error.message || 'An error occurred during sign-in');
         console.error('Sign-in error:', error);
       }
+    } finally {
+      setIsSigningIn(false);
     }
   };
 
@@ -112,16 +123,23 @@ export default function Welcome ()  {
           </Text>
 
           {/* ----- Google Sign In Button (gradient) -----*/}
-          <TouchableOpacity style={styles.button} activeOpacity={0.85} onPress={handleSignIn}>
+          <TouchableOpacity 
+            style={styles.button} 
+            activeOpacity={0.85} 
+            onPress={handleSignIn}
+            disabled={isSigningIn}
+          >
             <LinearGradient
-              colors={['#FF3F41', '#FFBE5B']}
+              colors={isSigningIn ? ['#CCCCCC', '#999999'] : ['#FF3F41', '#FFBE5B']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.buttonGradient}
             >
               <FontAwesome name="google" size={20} color="#FFFFFF" style={[styles.icons, {
     marginRight: 10,}]} />
-              <Text style={styles.buttonText}>Sign in with Google</Text>
+              <Text style={styles.buttonText}>
+                {isSigningIn ? 'Signing in...' : 'Sign in with Google'}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
 
