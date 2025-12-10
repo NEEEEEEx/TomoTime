@@ -15,8 +15,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { AuthContext } from '../context/AuthContext';
-import { getUserData, setUserData, removeUserData, clearAllUserData } from '../utils/userStorage';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserData, setUserData, clearAllUserData } from '../utils/userStorage';
 import styles from '../styles/appStyles';
 
 const PROFILE_PICTURE_KEY = 'profile_picture';
