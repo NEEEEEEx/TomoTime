@@ -150,9 +150,35 @@ export default function ChatAi() {
             const parsedTasks = parseStudyPlan(response);
             
             if (parsedTasks && parsedTasks.length > 0) {
-              // Store plan but don't show modal yet - wait for user confirmation
-              setPendingPlan(parsedTasks);
-              // Modal will show when user responds with approval
+              // Validate that no tasks are in the past
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              
+              const validTasks = parsedTasks.filter(task => {
+                const taskDate = new Date(task.date);
+                taskDate.setHours(0, 0, 0, 0);
+                return taskDate >= today;
+              });
+              
+              if (validTasks.length !== parsedTasks.length) {
+                const removedCount = parsedTasks.length - validTasks.length;
+                console.warn(`⚠️ Removed ${removedCount} past task(s) from study plan`);
+                
+                // Notify user if tasks were removed
+                if (validTasks.length === 0) {
+                  await addUserMessage('The study plan contained only past dates. Please create a new plan with future dates.');
+                  setConversation([ ...getConversation() ]);
+                } else if (removedCount > 0) {
+                  // Add a silent note that some tasks were filtered
+                  console.log(`Proceeding with ${validTasks.length} valid future tasks`);
+                }
+              }
+              
+              if (validTasks.length > 0) {
+                // Store plan but don't show modal yet - wait for user confirmation
+                setPendingPlan(validTasks);
+                // Modal will show when user responds with approval
+              }
             }
           } catch (parseError) {
             console.log('Failed to parse study plan:', parseError);

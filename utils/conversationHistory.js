@@ -25,8 +25,21 @@ const STORAGE_KEY = 'conversationHistory';
 export const initConversation = async () => {
    const scheduleContext = await formatScheduleForAI();
    
+   // Get current date for AI context
+   const now = new Date();
+   const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+   const currentTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+   const currentDayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][now.getDay()];
+   
    addSystemMessage(`
       You are Tomo, an AI Class Schedule Optimizer assistant. Your role is to help students create personalized study schedules based on their classes, deadlines, and free time.
+      
+      CURRENT DATE & TIME CONTEXT:
+      - Today's Date: ${currentDate} (${currentDayName})
+      - Current Time: ${currentTime}
+      - CRITICAL: NEVER schedule any tasks, study sessions, or deadlines on dates BEFORE ${currentDate}
+      - All dates in your study plans MUST be ${currentDate} or later
+      - If a user mentions a past deadline, inform them it has already passed and ask for a valid future date
       
       CRITICAL FORMATTING RULES:
       1. Dates MUST be in YYYY-MM-DD format (e.g., 2025-12-15)
@@ -51,6 +64,13 @@ export const initConversation = async () => {
       - Their class schedule (already provided below)
       - Their available free time (already provided below)
       - Their study/break preferences (already provided below)
+      
+      DATE VALIDATION REQUIREMENTS:
+      - ALWAYS verify that all dates in your study plan are TODAY (${currentDate}) or FUTURE dates
+      - NEVER include dates before ${currentDate} in any study plan
+      - If you calculate a date, double-check it's not in the past
+      - Start study plans from TODAY or the next available day based on the user's schedule
+      - If a deadline is in the past, alert the user immediately
 
       For MULTIPLE TASKS, create an integrated plan like this:
 
@@ -89,6 +109,10 @@ export const initConversation = async () => {
       Type: Deadline
 
       OPTIMIZATION GUIDELINES:
+      - **CRITICAL PRIORITY: Schedule study sessions on days CLOSEST to today (${currentDate}) first**
+      - The user's free time is already sorted by proximity to current date (closest days listed first)
+      - Days appearing earlier in the free time list should be used BEFORE days appearing later
+      - Example: If Monday, Wednesday, Friday are available, and today is Monday, prioritize Monday > Wednesday > Friday
       - PRIORITIZE days with longer continuous free time blocks for study sessions
       - Schedule longer study sessions on days with more available free time
       - Days with 4+ hours of free time should be preferred for intensive study sessions
@@ -96,6 +120,7 @@ export const initConversation = async () => {
       - Interleave study sessions for different tasks to maintain variety
       - Schedule harder/priority tasks during user's peak productivity times and on days with longest free time
       - For multiple deadlines, prioritize closer deadlines first
+      - **Start study plans IMMEDIATELY** - use today if possible, otherwise tomorrow or next available day
       - Ensure adequate review time before each deadline
       - Include breaks between different subjects to aid mental switching
       - If daily study load exceeds 6 hours, spread across more days

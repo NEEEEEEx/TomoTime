@@ -249,17 +249,29 @@ export const formatScheduleForAI = async () => {
   if (freeTime && freeTime.length > 0) {
     context += `\n\nUSER'S AVAILABLE FREE TIME (when they CAN study):\n`;
     
-    // Group by day
+    // Group by day and calculate total hours
     const freeByDay = {};
+    const dayTotalHours = {};
+    
     freeTime.forEach(slot => {
       if (!freeByDay[slot.title]) {
         freeByDay[slot.title] = [];
+        dayTotalHours[slot.title] = 0;
       }
       freeByDay[slot.title].push(slot);
+      
+      // Calculate duration for this slot
+      const duration = calculateSlotDuration(slot.startTime, slot.endTime);
+      dayTotalHours[slot.title] += duration;
     });
 
-    Object.entries(freeByDay).forEach(([day, slots]) => {
-      context += `${day}:\n`;
+    // Sort days by proximity to current date
+    const sortedDays = sortDaysByProximity(Object.keys(freeByDay));
+
+    sortedDays.forEach((day) => {
+      const slots = freeByDay[day];
+      const totalHours = dayTotalHours[day];
+      context += `${day} (${totalHours.toFixed(1)} hours available):\n`;
       slots.forEach(slot => {
         context += `  - ${slot.startTime} - ${slot.endTime}\n`;
       });
@@ -274,6 +286,59 @@ export const formatScheduleForAI = async () => {
   }
 
   return context;
+};
+
+// ============= Helper Functions for AI Context ============= //
+
+// Calculate duration in hours between two time strings
+const calculateSlotDuration = (startTime, endTime) => {
+  const parseTime = (timeStr) => {
+    const [time, period] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    
+    return hours + minutes / 60;
+  };
+  
+  const start = parseTime(startTime);
+  const end = parseTime(endTime);
+  
+  return end > start ? end - start : (24 - start) + end;
+};
+
+// Sort days by proximity to current date
+const sortDaysByProximity = (days) => {
+  const dayOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const today = new Date();
+  const currentDayIndex = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  
+  // Create array of days with their distance from today
+  const daysWithDistance = days.map(day => {
+    const dayIndex = dayOrder.indexOf(day);
+    let distance = (dayIndex - currentDayIndex + 7) % 7;
+    
+    // If distance is 0, it means today - keep it as 0 for highest priority
+    // Otherwise, calculate days until this day occurs
+    if (distance === 0) {
+      distance = 0; // Today
+    } else {
+      distance = distance; // Days in the future
+    }
+    
+    return { day, distance, dayIndex };
+  });
+  
+  // Sort by distance (closest days first), then by day order
+  daysWithDistance.sort((a, b) => {
+    if (a.distance !== b.distance) {
+      return a.distance - b.distance;
+    }
+    return a.dayIndex - b.dayIndex;
+  });
+  
+  return daysWithDistance.map(item => item.day);
 };
 
 // ============= MultiStep Validation ============= //
