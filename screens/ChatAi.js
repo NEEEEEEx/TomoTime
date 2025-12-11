@@ -17,7 +17,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import styles from '../styles/appStyles';
 import { makeChatRequest } from '../utils/openRouter';
-import { addUserMessage, getConversation,  resetConversation, loadConversation, removeLastMessage } from '../utils/conversationHistory';
+import { addUserMessage, addAssistantMessage, getConversation,  resetConversation, loadConversation, removeLastMessage } from '../utils/conversationHistory';
 import { parseStudyPlan, formatStudyPlanConfirmation, isStudyPlanResponse } from '../utils/studyPlanParser';
 import { detectConflicts, suggestScheduleAdjustments } from '../utils/scheduleConflictDetection';
 import { TaskContext } from '../context/TaskContext';
@@ -150,9 +150,42 @@ export default function ChatAi() {
             const parsedTasks = parseStudyPlan(response);
             
             if (parsedTasks && parsedTasks.length > 0) {
-              // Store plan but don't show modal yet - wait for user confirmation
-              setPendingPlan(parsedTasks);
-              // Modal will show when user responds with approval
+              // Validate that no tasks are in the past
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              
+              const validTasks = parsedTasks.filter(task => {
+                const taskDate = new Date(task.date);
+                taskDate.setHours(0, 0, 0, 0);
+                return taskDate >= today;
+              });
+              
+              if (validTasks.length !== parsedTasks.length) {
+                const removedCount = parsedTasks.length - validTasks.length;
+                console.warn(`⚠️ Removed ${removedCount} past task(s) from study plan`);
+                
+                // Notify user if tasks were removed
+                if (validTasks.length === 0) {
+                  await addUserMessage('The study plan contained only past dates. Please create a new plan with future dates.');
+                  setConversation([ ...getConversation() ]);
+                } else if (removedCount > 0) {
+                  // Add a silent note that some tasks were filtered
+                  console.log(`Proceeding with ${validTasks.length} valid future tasks`);
+                }
+              }
+              
+              if (validTasks.length > 0) {
+                // Store plan and add clear confirmation prompt
+                setPendingPlan(validTasks);
+                
+                // Add clear approval/rejection instructions
+                const promptMsg = `\n📋 **Study Plan Generated!**\n\nIf you want to adjust something, let me know what you'd like to change.\n\nIf you're satisfied with the plan:\n✅ Type **'yes'** to add this to your calendar\n\nIf you'd like a different plan:\n❌ Type **'no'** and I'll create a new suggestion\n\nWhat would you like to do?`;
+                await addAssistantMessage(promptMsg);
+                setConversation([ ...getConversation() ]);
+                
+                // Scroll to show the prompt
+                setTimeout(() => scrollToEnd(), 100);
+              }
             }
           } catch (parseError) {
             console.log('Failed to parse study plan:', parseError);
@@ -263,13 +296,24 @@ export default function ChatAi() {
 
   const handleRejectPlan = async () => {
     try {
-      const rejectMsg = 'I would like to modify the study plan. Can you suggest a different schedule?';
+      const rejectMsg = 'No, I would like a different study plan. Please create a new schedule with adjustments.';
       await addUserMessage(rejectMsg);
       setConversation([ ...getConversation() ]);
       
       setPlanModalVisible(false);
       setPendingPlan(null);
       setConflictingTasks([]);
+      
+      // Trigger AI to create new plan
+      setLoading(true);
+      try {
+        await makeChatRequest();
+        setConversation([ ...getConversation() ]);
+      } catch (error) {
+        console.error('Failed to get new plan:', error);
+      } finally {
+        setLoading(false);
+      }
     } catch (error) {
       console.error('Failed to reject plan:', error);
     }

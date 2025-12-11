@@ -223,43 +223,83 @@ export const formatScheduleForAI = async () => {
   context += `- Preferred study block duration: ${studyTime}\n`;
   context += `- Preferred break duration: ${breakTime}\n`;
 
-  // Add class schedule
+  // Add class schedule with load analysis
   if (classes && classes.length > 0) {
     context += `\n\nUSER'S CLASS SCHEDULE (when they are NOT available):\n`;
     
-    // Group classes by day
+    // Group classes by day and count class load
     const classesByDay = {};
+    const classLoadByDay = {};
+    
     classes.forEach(cls => {
       if (!classesByDay[cls.day]) {
         classesByDay[cls.day] = [];
+        classLoadByDay[cls.day] = 0;
       }
       classesByDay[cls.day].push(cls);
+      classLoadByDay[cls.day] += 1;
     });
 
-    // Format by day
+    // Format by day with class count
     Object.entries(classesByDay).forEach(([day, dayClasses]) => {
-      context += `${day}:\n`;
+      const classCount = dayClasses.length;
+      context += `${day} (${classCount} class${classCount > 1 ? 'es' : ''}):\n`;
       dayClasses.forEach(cls => {
         context += `  - ${cls.title}: ${cls.startTime} - ${cls.endTime}\n`;
       });
     });
   }
 
-  // Add free time
+  // Add free time with class load analysis
   if (freeTime && freeTime.length > 0) {
     context += `\n\nUSER'S AVAILABLE FREE TIME (when they CAN study):\n`;
     
-    // Group by day
+    // Get class load data
+    const classesByDay = {};
+    if (classes && classes.length > 0) {
+      classes.forEach(cls => {
+        if (!classesByDay[cls.day]) {
+          classesByDay[cls.day] = 0;
+        }
+        classesByDay[cls.day] += 1;
+      });
+    }
+    
+    // Group by day and calculate total hours
     const freeByDay = {};
+    const dayTotalHours = {};
+    
     freeTime.forEach(slot => {
       if (!freeByDay[slot.title]) {
         freeByDay[slot.title] = [];
+        dayTotalHours[slot.title] = 0;
       }
       freeByDay[slot.title].push(slot);
+      
+      // Calculate duration for this slot
+      const duration = calculateSlotDuration(slot.startTime, slot.endTime);
+      dayTotalHours[slot.title] += duration;
     });
 
-    Object.entries(freeByDay).forEach(([day, slots]) => {
-      context += `${day}:\n`;
+    // Sort days by optimal study conditions (proximity + class load)
+    const sortedDays = sortDaysByOptimalStudyConditions(Object.keys(freeByDay), classesByDay);
+
+    sortedDays.forEach((dayInfo) => {
+      const day = dayInfo.day;
+      const slots = freeByDay[day];
+      const totalHours = dayTotalHours[day];
+      const classCount = classesByDay[day] || 0;
+      
+      let dayLabel = `${day} (${totalHours.toFixed(1)} hrs free`;
+      if (classCount === 0) {
+        dayLabel += `, NO CLASSES - OPTIMAL)`;
+      } else if (classCount === 1) {
+        dayLabel += `, 1 class - Good)`;
+      } else {
+        dayLabel += `, ${classCount} classes - Busy)`;
+      }
+      
+      context += `${dayLabel}:\n`;
       slots.forEach(slot => {
         context += `  - ${slot.startTime} - ${slot.endTime}\n`;
       });
@@ -268,12 +308,123 @@ export const formatScheduleForAI = async () => {
 
   // Add instructions
   if (classes.length > 0 || freeTime.length > 0) {
-    context += `\n\nIMPORTANT: When creating study plans, ONLY schedule study sessions during the user's available free time listed above. AVOID scheduling during class times. Use the user's preferred study and break durations when possible.`;
+    context += `\n\nCRITICAL SCHEDULING RULES:
+1. ONLY schedule study sessions during the user's available free time listed above
+2. PRIORITIZE days marked as "OPTIMAL" (no classes) for study sessions
+3. AVOID scheduling on days with multiple classes unless absolutely necessary
+4. If insufficient free time, use days with FEWEST classes first
+5. NEVER schedule during non-ideal hours: 11:00 PM to 6:00 AM (late night/early morning)
+6. AVOID scheduling during class times
+7. Use the user's preferred study and break durations when possible
+8. Days are already sorted by optimal study conditions - use earlier-listed days first`;
   } else {
     context += `\n\nNOTE: The user has not added any class schedule or free time slots yet. Please remind them to add this information in the Multi-Step setup for better study plan recommendations.`;
   }
 
   return context;
+};
+
+// ============= Helper Functions for AI Context ============= //
+
+// Calculate duration in hours between two time strings
+const calculateSlotDuration = (startTime, endTime) => {
+  const parseTime = (timeStr) => {
+    const [time, period] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    
+    return hours + minutes / 60;
+  };
+  
+  const start = parseTime(startTime);
+  const end = parseTime(endTime);
+  
+  return end > start ? end - start : (24 - start) + end;
+};
+
+// Sort days by proximity to current date
+const sortDaysByProximity = (days) => {
+  const dayOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const today = new Date();
+  const currentDayIndex = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  
+  // Create array of days with their distance from today
+  const daysWithDistance = days.map(day => {
+    const dayIndex = dayOrder.indexOf(day);
+    let distance = (dayIndex - currentDayIndex + 7) % 7;
+    
+    // If distance is 0, it means today - keep it as 0 for highest priority
+    // Otherwise, calculate days until this day occurs
+    if (distance === 0) {
+      distance = 0; // Today
+    } else {
+      distance = distance; // Days in the future
+    }
+    
+    return { day, distance, dayIndex };
+  });
+  
+  // Sort by distance (closest days first), then by day order
+  daysWithDistance.sort((a, b) => {
+    if (a.distance !== b.distance) {
+      return a.distance - b.distance;
+    }
+    return a.dayIndex - b.dayIndex;
+  });
+  
+  return daysWithDistance.map(item => item.day);
+};
+
+// Sort days by optimal study conditions (proximity + class load)
+const sortDaysByOptimalStudyConditions = (days, classesByDay = {}) => {
+  const dayOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const today = new Date();
+  const currentDayIndex = today.getDay();
+  
+  // Create array with ranking metrics
+  const daysWithMetrics = days.map(day => {
+    const dayIndex = dayOrder.indexOf(day);
+    const distance = (dayIndex - currentDayIndex + 7) % 7;
+    const classCount = classesByDay[day] || 0;
+    
+    // Calculate priority score (lower is better)
+    // Priority order: class load (most important) > proximity (secondary)
+    let priorityScore = 0;
+    
+    // Class load scoring (0 classes = best)
+    if (classCount === 0) {
+      priorityScore += 0; // OPTIMAL - no classes
+    } else if (classCount === 1) {
+      priorityScore += 100; // Good - one class
+    } else if (classCount === 2) {
+      priorityScore += 200; // Okay - two classes
+    } else {
+      priorityScore += 300 + (classCount * 50); // Busy - multiple classes
+    }
+    
+    // Add proximity score (closer days get lower scores)
+    priorityScore += distance * 10;
+    
+    return { 
+      day, 
+      distance, 
+      classCount, 
+      priorityScore, 
+      dayIndex 
+    };
+  });
+  
+  // Sort by priority score (lower is better), then by distance
+  daysWithMetrics.sort((a, b) => {
+    if (a.priorityScore !== b.priorityScore) {
+      return a.priorityScore - b.priorityScore;
+    }
+    return a.distance - b.distance;
+  });
+  
+  return daysWithMetrics;
 };
 
 // ============= MultiStep Validation ============= //

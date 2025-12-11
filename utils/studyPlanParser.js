@@ -118,7 +118,8 @@ export const parseStudyPlan = (aiResponse) => {
         const descText = descMatch ? descMatch[1] : trimmed;
         
         // Only add meaningful text (not just "Type: Study", "Priority: High", etc.)
-        if (!trimmed.match(/^(?:Type|Priority|Deadline):/i)) {
+        // Don't filter "Deadline:" as it's not a metadata line
+        if (!trimmed.match(/^(?:Type|Priority):/i)) {
           if (currentTask.description) {
             currentTask.description += ' ' + descText;
           } else {
@@ -137,14 +138,38 @@ export const parseStudyPlan = (aiResponse) => {
 
   console.log('All parsed tasks before filtering:', JSON.stringify(tasks, null, 2));
   
+  // Get current date for validation
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+  
   const filteredTasks = tasks.filter(task => {
     const hasDate = !!task.date;
     const hasTitle = !!task.title;
-    console.log(`Task "${task.title}": hasDate=${hasDate}, hasTitle=${hasTitle}`);
-    return hasDate && hasTitle;
+    
+    // Check if date is not in the past
+    let isNotPast = true;
+    if (task.date) {
+      const taskDate = new Date(task.date);
+      taskDate.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+      isNotPast = taskDate >= today;
+      
+      if (!isNotPast) {
+        console.warn(`⚠️ Filtering out past task: "${task.title}" scheduled for ${task.date} (already passed)`);
+      }
+    }
+    
+    console.log(`Task "${task.title}": hasDate=${hasDate}, hasTitle=${hasTitle}, isNotPast=${isNotPast}`);
+    return hasDate && hasTitle && isNotPast;
   });
   
-  console.log('Filtered tasks (with date and title):', JSON.stringify(filteredTasks, null, 2));
+  console.log('Filtered tasks (with date, title, and not in past):', JSON.stringify(filteredTasks, null, 2));
+  
+  // Log warning if any tasks were filtered due to past dates
+  const pastTasksCount = tasks.filter(t => t.date && t.title).length - filteredTasks.length;
+  if (pastTasksCount > 0) {
+    console.warn(`⚠️ Removed ${pastTasksCount} task(s) with past dates from the study plan`);
+  }
+  
   return filteredTasks;
 };
 

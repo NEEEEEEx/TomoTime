@@ -8,6 +8,7 @@ const TASKS_STORAGE_KEY = 'scheduleTasks';
 
 export const TaskProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]);
+  const taskIdCounter = React.useRef(0);
 
   // Initialize tasks from storage
   const loadTasks = useCallback(async () => {
@@ -33,8 +34,12 @@ export const TaskProvider = ({ children }) => {
 
   // Add a new task
   const addTask = useCallback((task) => {
+    // Generate unique ID using timestamp + counter
+    taskIdCounter.current += 1;
+    const uniqueId = `${Date.now()}-${taskIdCounter.current}`;
+    
     const newTask = {
-      taskId: Date.now().toString(),
+      taskId: uniqueId,
       ...task,
     };
     
@@ -52,17 +57,29 @@ export const TaskProvider = ({ children }) => {
 
   // Update an existing task
   const updateTask = useCallback((taskId, updates) => {
-    const updatedTasks = tasks.map(task =>
-      task.taskId === taskId ? { ...task, ...updates } : task
-    );
-    persistTasks(updatedTasks);
-  }, [tasks, persistTasks]);
+    setTasks(prevTasks => {
+      const updatedTasks = prevTasks.map(task =>
+        task.taskId === taskId ? { ...task, ...updates } : task
+      );
+      // Persist asynchronously
+      setUserData(TASKS_STORAGE_KEY, updatedTasks).catch(error => {
+        console.error('Failed to persist tasks:', error);
+      });
+      return updatedTasks;
+    });
+  }, []);
 
   // Delete a task
   const deleteTask = useCallback((taskId) => {
-    const updatedTasks = tasks.filter(task => task.taskId !== taskId);
-    persistTasks(updatedTasks);
-  }, [tasks, persistTasks]);
+    setTasks(prevTasks => {
+      const updatedTasks = prevTasks.filter(task => task.taskId !== taskId);
+      // Persist asynchronously
+      setUserData(TASKS_STORAGE_KEY, updatedTasks).catch(error => {
+        console.error('Failed to persist tasks:', error);
+      });
+      return updatedTasks;
+    });
+  }, []);
 
   // Get tasks for a specific date
   const getTasksForDate = useCallback((dateString) => {
