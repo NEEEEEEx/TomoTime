@@ -17,7 +17,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import styles from '../styles/appStyles';
 import { makeChatRequest } from '../utils/openRouter';
-import { addUserMessage, getConversation,  resetConversation, loadConversation, removeLastMessage } from '../utils/conversationHistory';
+import { addUserMessage, addAssistantMessage, getConversation,  resetConversation, loadConversation, removeLastMessage } from '../utils/conversationHistory';
 import { parseStudyPlan, formatStudyPlanConfirmation, isStudyPlanResponse } from '../utils/studyPlanParser';
 import { detectConflicts, suggestScheduleAdjustments } from '../utils/scheduleConflictDetection';
 import { TaskContext } from '../context/TaskContext';
@@ -175,9 +175,16 @@ export default function ChatAi() {
               }
               
               if (validTasks.length > 0) {
-                // Store plan but don't show modal yet - wait for user confirmation
+                // Store plan and add clear confirmation prompt
                 setPendingPlan(validTasks);
-                // Modal will show when user responds with approval
+                
+                // Add clear approval/rejection instructions
+                const promptMsg = `\n📋 **Study Plan Generated!**\n\nIf you want to adjust something, let me know what you'd like to change.\n\nIf you're satisfied with the plan:\n✅ Type **'yes'** to add this to your calendar\n\nIf you'd like a different plan:\n❌ Type **'no'** and I'll create a new suggestion\n\nWhat would you like to do?`;
+                await addAssistantMessage(promptMsg);
+                setConversation([ ...getConversation() ]);
+                
+                // Scroll to show the prompt
+                setTimeout(() => scrollToEnd(), 100);
               }
             }
           } catch (parseError) {
@@ -289,13 +296,24 @@ export default function ChatAi() {
 
   const handleRejectPlan = async () => {
     try {
-      const rejectMsg = 'I would like to modify the study plan. Can you suggest a different schedule?';
+      const rejectMsg = 'No, I would like a different study plan. Please create a new schedule with adjustments.';
       await addUserMessage(rejectMsg);
       setConversation([ ...getConversation() ]);
       
       setPlanModalVisible(false);
       setPendingPlan(null);
       setConflictingTasks([]);
+      
+      // Trigger AI to create new plan
+      setLoading(true);
+      try {
+        await makeChatRequest();
+        setConversation([ ...getConversation() ]);
+      } catch (error) {
+        console.error('Failed to get new plan:', error);
+      } finally {
+        setLoading(false);
+      }
     } catch (error) {
       console.error('Failed to reject plan:', error);
     }

@@ -118,7 +118,8 @@ export const parseStudyPlan = (aiResponse) => {
         const descText = descMatch ? descMatch[1] : trimmed;
         
         // Only add meaningful text (not just "Type: Study", "Priority: High", etc.)
-        if (!trimmed.match(/^(?:Type|Priority|Deadline):/i)) {
+        // Don't filter "Deadline:" as it's not a metadata line
+        if (!trimmed.match(/^(?:Type|Priority):/i)) {
           if (currentTask.description) {
             currentTask.description += ' ' + descText;
           } else {

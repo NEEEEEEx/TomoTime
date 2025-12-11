@@ -109,24 +109,38 @@ export const initConversation = async () => {
       Type: Deadline
 
       OPTIMIZATION GUIDELINES:
-      - **CRITICAL PRIORITY: Schedule study sessions on days CLOSEST to today (${currentDate}) first**
-      - The user's free time is already sorted by proximity to current date (closest days listed first)
-      - Days appearing earlier in the free time list should be used BEFORE days appearing later
-      - Example: If Monday, Wednesday, Friday are available, and today is Monday, prioritize Monday > Wednesday > Friday
-      - PRIORITIZE days with longer continuous free time blocks for study sessions
-      - Schedule longer study sessions on days with more available free time
-      - Days with 4+ hours of free time should be preferred for intensive study sessions
-      - Days with shorter free time blocks are better for quick reviews or break periods
+      
+      **CRITICAL PRIORITY HIERARCHY (follow in this exact order):**
+      1. **MAXIMIZE FREE TIME USAGE**: Schedule study sessions ONLY during available free time slots
+      2. **PRIORITIZE OPTIMAL DAYS**: Days marked "OPTIMAL" (no classes) should be used FIRST for all study sessions
+      3. **AVOID BUSY DAYS**: Days with multiple classes should be LAST RESORT - only use if no other option
+      4. **NEVER USE NON-IDEAL HOURS**: Absolutely NO scheduling between 11:00 PM - 6:00 AM (late night/early morning)
+      5. **RESPECT PROXIMITY**: Among days with similar class loads, choose days closest to today first
+      
+      **CLASS LOAD PREFERENCE ORDER:**
+      - 1st Choice: Days with NO classes (marked "OPTIMAL")
+      - 2nd Choice: Days with 1 class (marked "Good")
+      - 3rd Choice: Days with 2 classes (marked "Okay")
+      - Last Resort: Days with 3+ classes (marked "Busy") - avoid unless absolutely necessary
+      
+      **TIME ALLOCATION STRATEGY:**
+      - Days are pre-sorted by optimal study conditions (class load + proximity)
+      - Always use earlier-listed days BEFORE later-listed days
+      - On "OPTIMAL" days (no classes): Schedule longer, intensive study sessions (2-4 hours)
+      - On "Good" days (1 class): Schedule moderate study sessions (1-2 hours)
+      - On "Busy" days (2+ classes): Only use for short reviews or if deadline is urgent
+      - Days with 4+ hours free time = ideal for comprehensive study sessions
+      - Days with 1-2 hours free time = suitable for focused reviews or specific topics
+      
+      **ADDITIONAL RULES:**
+      - **Start study plans IMMEDIATELY** - use today if possible and optimal
       - Interleave study sessions for different tasks to maintain variety
-      - Schedule harder/priority tasks during user's peak productivity times and on days with longest free time
       - For multiple deadlines, prioritize closer deadlines first
-      - **Start study plans IMMEDIATELY** - use today if possible, otherwise tomorrow or next available day
       - Ensure adequate review time before each deadline
       - Include breaks between different subjects to aid mental switching
       - If daily study load exceeds 6 hours, spread across more days
       - Create at least 2-3 study sessions per task, depending on difficulty
-      - All study sessions must fit within the user's available free time
-      - Distribute study time efficiently: use days with longer free time for comprehensive study sessions
+      - Never schedule during class times (explicitly listed in class schedule)
 
       After creating a study plan, present it clearly and ask: "Would you like me to add this schedule to your calendar?"
       
