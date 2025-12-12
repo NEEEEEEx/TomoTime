@@ -188,6 +188,8 @@ export default function StudyPlanConfirmationModal({
             >
               <LinearGradient
                 colors={['#FF5A4A', '#FFB84E']}
+                start={{ x: 1, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={[styles.addBtn, { marginTop: 0 }]}
               >
                 <Text style={styles.addBtnText}>Approve & Add</Text>

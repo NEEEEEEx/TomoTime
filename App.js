@@ -84,10 +84,12 @@ const AppNavigator = () => {
     <NavigationContainer
       initialState={initialState}
       onStateChange={(state) => {
-        // Save navigation state using user-specific storage
-        setUserData(NAVIGATION_STATE_KEY, state).catch(error => {
-          console.error('Failed to save navigation state:', error);
-        });
+        // Only save navigation state if user is logged in
+        if (user) {
+          setUserData(NAVIGATION_STATE_KEY, state).catch(error => {
+            console.error('Failed to save navigation state:', error);
+          });
+        }
       }}
     >
       <Stack.Navigator
