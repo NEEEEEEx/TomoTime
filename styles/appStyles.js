@@ -586,5 +586,21 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand-SemiBold',
   },
   //============================================//
+
+  //========= Clear Button =========//
+  clearButton: {
+    marginVertical: 10,
+    backgroundColor: '#BE1C1C',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 600,
+    fontFamily: 'Quicksand-SemiBold',
+  },
+  //=================================//
 });
 export default styles;

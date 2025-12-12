@@ -89,6 +89,13 @@ export default function ChatAi() {
     return unsubscribe;
   }, [navigation]);
 
+  // Auto-scroll when conversation changes
+  useEffect(() => {
+    if (conversation.length > 0) {
+      setTimeout(() => scrollToEnd(), 100);
+    }
+  }, [conversation]);
+
   // ============= Handle Sending Messages ============= //
   const handleSend = useCallback( async () => {
     if (messageText === '') return;
@@ -295,8 +302,10 @@ export default function ChatAi() {
   };
 
   const handleRejectPlan = async () => {
+    const rejectMsg = 'I would like a different study plan. Please create a new schedule with adjustments.';
+    
     try {
-      const rejectMsg = 'No, I would like a different study plan. Please create a new schedule with adjustments.';
+      // Add rejection message to conversation
       await addUserMessage(rejectMsg);
       setConversation([ ...getConversation() ]);
       
@@ -309,13 +318,34 @@ export default function ChatAi() {
       try {
         await makeChatRequest();
         setConversation([ ...getConversation() ]);
-      } catch (error) {
-        console.error('Failed to get new plan:', error);
+      } catch (chatError) {
+        // Remove the failed rejection message from conversation history
+        await removeLastMessage();
+        setConversation([ ...getConversation() ]);
+        
+        // Restore the rejection message to the input box for re-entering
+        setMessageText(rejectMsg);
+        
+        // Show error alert
+        Alert.alert(
+          'Connection Error',
+          'Failed to get response from AI. Your rejection message has been restored to the input box. Please try again.',
+          [{ text: 'OK' }]
+        );
+        
+        console.error('Failed to get new plan:', chatError);
       } finally {
         setLoading(false);
       }
     } catch (error) {
       console.error('Failed to reject plan:', error);
+      // Restore the rejection message to the input box
+      setMessageText(rejectMsg);
+      Alert.alert(
+        'Error',
+        'Failed to send rejection message. The message has been restored to the input box. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
   // ============ End of Handle Study Plan Approval ============ //
@@ -438,15 +468,20 @@ export default function ChatAi() {
               placeholder="What would you like to do?"
               placeholderTextColor="#b87b3d"
               style={styles.chatInput}
+              editable={!loading}
             />
-            <TouchableOpacity onPress={handleSend} activeOpacity={0.8}>
+            <TouchableOpacity 
+              onPress={handleSend} 
+              activeOpacity={0.8}
+              disabled={loading}
+            >
               <LinearGradient
-                colors={['#FF5F6D', '#FFC371']}
+                colors={loading ? ['#CCCCCC', '#999999'] : ['#FF5F6D', '#FFC371']}
                 start={{ x: 0, y: 1 }}
                 end={{ x: 1, y: 0 }}
-                style={styles.chatSendButton}
+                style={[styles.chatSendButton, loading && { opacity: 0.5 }]}
               >
-                <FontAwesome5 name="arrow-up" size={18} color="#9c440dff" />
+                <FontAwesome5 name="arrow-up" size={18} color={loading ? "#666666" : "#9c440dff"} />
               </LinearGradient>
             </TouchableOpacity>
           </View>

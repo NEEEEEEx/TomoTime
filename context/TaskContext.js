@@ -119,6 +119,16 @@ export const TaskProvider = ({ children }) => {
     });
   }, [tasks]);
 
+  // Clear all tasks
+  const clearAllTasks = useCallback(async () => {
+    try {
+      setTasks([]);
+      await setUserData(TASKS_STORAGE_KEY, []);
+    } catch (error) {
+      console.error('Failed to clear all tasks:', error);
+    }
+  }, []);
+
   const value = {
     tasks,
     loadTasks,
@@ -128,6 +138,7 @@ export const TaskProvider = ({ children }) => {
     getTasksForDate,
     getAllTasks,
     checkTimeConflict,
+    clearAllTasks,
   };
 
   return (

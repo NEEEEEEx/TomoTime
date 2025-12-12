@@ -26,7 +26,7 @@ const PROFILE_PICTURE_KEY = 'profile_picture';
 
 export default function CalendarPage () {
   const navigation = useNavigation();
-  const { tasks, loadTasks, updateTask, deleteTask } = useContext(TaskContext);
+  const { tasks, loadTasks, updateTask, deleteTask, clearAllTasks } = useContext(TaskContext);
   const { signOut, user } = useContext(AuthContext);
   const [selectedDate, setSelectedDate] = useState('');
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -218,6 +218,30 @@ export default function CalendarPage () {
       { text: 'Delete', style: 'destructive', 
         onPress: () => deleteTask(taskId) }
     ]);
+  };
+
+  // Clear All Tasks
+  const handleClearAllTasks = () => {
+    if (tasks.length === 0) {
+      Alert.alert('No Tasks', 'There are no tasks to clear.');
+      return;
+    }
+    
+    Alert.alert(
+      'Clear All Tasks',
+      `Are you sure you want to delete all ${tasks.length} task${tasks.length > 1 ? 's' : ''}? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Clear All', 
+          style: 'destructive', 
+          onPress: async () => {
+            await clearAllTasks();
+            setSelectedDate(''); // Clear selected date filter
+          }
+        }
+      ]
+    );
   };
 
   //=============== End of Task Handlers ================//
@@ -521,6 +545,16 @@ export default function CalendarPage () {
               // Mark specific dates as marked
               markedDates={markedDates}
             />
+
+            {/* ----- Clear All Tasks Button -----*/}
+            {tasks.length > 0 && (
+              <TouchableOpacity 
+                style={styles.clearButton} 
+                onPress={handleClearAllTasks}
+              >
+                <Text style={styles.clearButtonText}>Clear All Tasks ({tasks.length})</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
         {/* -------- Render Dynamic Task Cards List ------- */}
