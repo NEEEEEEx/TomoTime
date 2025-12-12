@@ -34,7 +34,7 @@ export const clearCurrentUserId = () => {
  */
 const getUserKey = (key) => {
   if (!currentUserId) {
-    console.warn('No user ID set. Data will be stored globally.');
+    console.log('No user ID set. Data will be stored globally.');
     return key;
   }
   return `user_${currentUserId}_${key}`;
