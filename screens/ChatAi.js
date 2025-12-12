@@ -23,7 +23,7 @@ import { detectConflicts, suggestScheduleAdjustments } from '../utils/scheduleCo
 import { TaskContext } from '../context/TaskContext';
 import Bubble from '../components/chat/bubble';
 import StudyPlanConfirmationModal from '../components/modals/StudyPlanConfirmationModal';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// Note: Data isolation is handled through conversationHistory and TaskContext utilities
 
 //================== Sample AI Chats ===================//
 const initialMessages = [
