@@ -410,18 +410,29 @@ export default function MultiStep({ navigation, route}) {
   //=========================================//
 
   // =========== Handlers for Selecting and Adding Items ============ //
-  
+  // Helper to convert "14:00" to "2:00 PM"
+  const formatTo12Hour = (time24) => {
+    if (!time24) return "";
+    const [hours, minutes] = time24.split(':');
+    let h = parseInt(hours, 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    h = h ? h : 12; // the hour '0' should be '12'
+    return `${h}:${minutes} ${ampm}`;
+  };
+  // Handler for AI Importer Success
   // Handler for AI Importer Success
   const handleAIImportSuccess = (parsedData) => {
     // 1. Transform AI data format to App data format
-    // AI returns: { title: "Math", day: "Monday", start_time: "09:00", end_time: "10:30" }
-    // App wants: { id: "...", title: "Math", day: "Monday", time: "09:00 - 10:30" }
+    // AI returns: { title: "Math", day: "Monday", start_time: "14:00", end_time: "15:30" }
     
     const newClasses = parsedData.map((item, index) => ({
       id: (Date.now() + index).toString(), // Generate unique ID
       title: item.title,
       day: item.day,
-      time: `${item.start_time} - ${item.end_time}` // Combine times string
+      // Convert the 24h time from AI to 12h format for the app
+      startTime: formatTo12Hour(item.start_time), 
+      endTime: formatTo12Hour(item.end_time),
     }));
 
     // 2. Add to existing classes state
@@ -429,7 +440,6 @@ export default function MultiStep({ navigation, route}) {
 
     // 3. Close Modal and Notify
     setImportModalVisible(false);
-    // Optional: Alert.alert("Success", `${newClasses.length} classes imported successfully!`);
   };
 
 
