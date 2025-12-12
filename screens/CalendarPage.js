@@ -509,6 +509,7 @@ export default function CalendarPage () {
                 todayTextColor: '#ffbe5b',
                 dayTextColor: '#000000ff',
                 textDisabledColor: '#d6b3b3ff',
+                arrowColor: '#ffbe5b'
               }}
               // Specify the current date
               current={'2025-12-02'}
