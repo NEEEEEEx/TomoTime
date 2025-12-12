@@ -47,12 +47,18 @@ export default function CalendarPage () {
   // Load profile picture
   const loadProfilePicture = async () => {
     try {
+      // 1. Try to get custom picture from storage
       const picture = await getUserData(PROFILE_PICTURE_KEY);
+      
       if (picture) {
         setProfilePicture(picture);
-      } else if (user?.user?.photo) {
-        setProfilePicture(user.user.photo);
-      } else {
+      } 
+      // 2. Fallback to Google Photo from AuthContext
+      // UPDATED: Changed user.user.photo to user.photo
+      else if (user?.photo) {
+        setProfilePicture(user.photo);
+      } 
+      else {
         setProfilePicture(null);
       }
     } catch (error) {
@@ -70,7 +76,7 @@ export default function CalendarPage () {
     });
 
     return unsubscribe;
-  }, [navigation, loadTasks]);
+  }, [navigation, loadTasks, user]); // Added user to dependencies
 
   //=========== Burger Menu ============//
   const toggleBurgerMenu = () => {
@@ -119,54 +125,6 @@ export default function CalendarPage () {
     );
   }
   //===================================//
-
-  //=========== Initial Sample Data (can be removed once migration is complete) ===========//
-  // These are kept for reference - actual tasks come from TaskContext
-  const initialSampleTasks = [
-    { 
-      taskId: '11', 
-      title: 'Quiz 1 - IIT414 (Part 1)', 
-      description: 'Coverage: JS Basics, React Hooks, Async Storage', 
-      date: '2025-12-02', 
-      day: 'Saturday',
-      startTime: '14:00',
-      endTime: '15:00',
-      priority: 'Medium',
-      taskType: 'Study',
-    },
-    { 
-      taskId: '12', 
-      title: 'Break Time', 
-      description: 'Short recharge between study blocks', 
-      date: '2025-12-02', 
-      day: 'Saturday',
-      startTime: '15:00',
-      endTime: '15:15',
-      taskType: 'Break',
-    },
-    { 
-      taskId: '13', 
-      title: 'Project 1 - IIT414 (Part 1)', 
-      description: 'Coverage: Virtual Assistant System Testing', 
-      date: '2025-12-02', 
-      day: 'Saturday',
-      startTime: '15:15',
-      endTime: '16:15',
-      priority: 'High',
-      taskType: 'Study',
-    },
-    { 
-      taskId: '14', 
-      title: 'Project 1 - IIT414 ', 
-      description: 'Coverage: Virtual Assistant System Testing', 
-      date: '2025-12-12', 
-      day: 'Saturday',
-      endTime: '23:59',
-      priority: 'High',
-      taskType: 'Deadline',
-    },
-  ];
-  //==============================================//
 
   //=========== Task Type Color Identifiers ===========//
   const getTaskColors = (taskType) => {

@@ -7,15 +7,13 @@ import {
   Alert,
   ScrollView,
   ImageBackground,
-  Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons';
+import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons'; // Ensure you have this installed or switch to FontAwesome
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { AuthContext } from '../context/AuthContext';
-import { getUserData, setUserData, clearAllUserData } from '../utils/userStorage';
+import { getUserData, clearAllUserData } from '../utils/userStorage';
 import styles from '../styles/appStyles';
 
 const PROFILE_PICTURE_KEY = 'profile_picture';
@@ -26,109 +24,23 @@ export default function ProfilePage({ navigation }) {
 
   useEffect(() => {
     loadUserSettings();
-  }, []);
+  }, [user]); // Added user as dependency
 
   const loadUserSettings = async () => {
     try {
-      // Load profile picture
+      // 1. Check local storage (in case a custom photo was saved previously)
       const picture = await getUserData(PROFILE_PICTURE_KEY);
+      
       if (picture) {
         setProfilePicture(picture);
-      } else if (user?.user?.photo) {
-        setProfilePicture(user.user.photo);
+      } 
+      // 2. Fallback to Google Photo from AuthContext
+      // UPDATED: Changed user.user.photo to user.photo
+      else if (user?.photo) {
+        setProfilePicture(user.photo);
       }
     } catch (error) {
       console.error('Error loading user settings:', error);
-    }
-  };
-
-  const handleChangeProfilePicture = () => {
-    Alert.alert(
-      'Change Profile Picture',
-      'Choose an option',
-      [
-        {
-          text: 'Take Photo',
-          onPress: handleTakePhoto
-        },
-        {
-          text: 'Choose from Gallery',
-          onPress: handleChooseFromGallery
-        },,
-        {
-          text: 'Use Default',
-          onPress: async () => {
-            setProfilePicture(null);
-            await setUserData(PROFILE_PICTURE_KEY, null);
-            Alert.alert('Success', 'Profile picture updated to default.');
-          }
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        }
-      ]
-    );
-  };
-
-  const handleTakePhoto = async () => {
-    const options = {
-      mediaType: 'photo',
-      quality: 0.8,
-      saveToPhotos: true,
-    };
-
-    try {
-      const result = await launchCamera(options);
-      
-      if (result.didCancel) {
-        return;
-      }
-
-      if (result.errorCode) {
-        Alert.alert('Error', result.errorMessage || 'Failed to take photo');
-        return;
-      }
-
-      if (result.assets && result.assets.length > 0) {
-        const imageUri = result.assets[0].uri;
-        setProfilePicture(imageUri);
-        await setUserData(PROFILE_PICTURE_KEY, imageUri);
-        Alert.alert('Success', 'Profile picture updated!');
-      }
-    } catch (error) {
-      console.error('Error taking photo:', error);
-      Alert.alert('Error', 'Failed to take photo. Please try again.');
-    }
-  };
-
-  const handleChooseFromGallery = async () => {
-    const options = {
-      mediaType: 'photo',
-      quality: 0.8,
-    };
-
-    try {
-      const result = await launchImageLibrary(options);
-      
-      if (result.didCancel) {
-        return;
-      }
-
-      if (result.errorCode) {
-        Alert.alert('Error', result.errorMessage || 'Failed to select image');
-        return;
-      }
-
-      if (result.assets && result.assets.length > 0) {
-        const imageUri = result.assets[0].uri;
-        setProfilePicture(imageUri);
-        await setUserData(PROFILE_PICTURE_KEY, imageUri);
-        Alert.alert('Success', 'Profile picture updated!');
-      }
-    } catch (error) {
-      console.error('Error selecting image:', error);
-      Alert.alert('Error', 'Failed to select image. Please try again.');
     }
   };
 
@@ -152,19 +64,18 @@ export default function ProfilePage({ navigation }) {
 
   const confirmDeleteAccount = async () => {
     try {
-      // Clear ALL user-specific data (semesters, classes, tasks, preferences, etc.)
+      // Clear ALL user-specific data
       await clearAllUserData();
       
-      // Sign out (this also clears user ID and global user data)
+      // Sign out
       await signOut();
       
-      // Navigate first, then show alert
+      // Navigate first
       navigation.reset({
         index: 0,
         routes: [{ name: 'Welcome' }],
       });
       
-      // Use setTimeout to show alert after navigation completes
       setTimeout(() => {
         Alert.alert('Account Deleted', 'Your account has been deleted successfully.');
       }, 300);
@@ -202,12 +113,14 @@ export default function ProfilePage({ navigation }) {
     );
   };
 
+  // UPDATED: Removed extra nesting
   const getUserName = () => {
-    return user?.user?.name || user?.name || 'User';
+    return user?.name || 'User';
   };
 
+  // UPDATED: Removed extra nesting
   const getUserEmail = () => {
-    return user?.user?.email || user?.email || '';
+    return user?.email || '';
   };
 
   const getProfilePictureSource = () => {
@@ -260,13 +173,9 @@ export default function ProfilePage({ navigation }) {
             
             <Text style={styles.profileName}>{getUserName()}</Text>
             <Text style={styles.profileEmail}>{getUserEmail()}</Text>
-
-            <TouchableOpacity
-              style={styles.changePhotoButton}
-              onPress={handleChangeProfilePicture}
-            >
-              <Text style={styles.changePhotoText}>Change Photo</Text>
-            </TouchableOpacity>
+            
+            {/* REMOVED: Change Photo Button */}
+            
           </View>
 
           {/* Account Actions Section */}
@@ -285,6 +194,8 @@ export default function ProfilePage({ navigation }) {
               style={styles.deleteAccountButton}
               onPress={handleDeleteAccount}
             >
+              {/* Note: If MaterialDesignIcons is not working, swap with FontAwesome */}
+              {/* <FontAwesome name="user-times" size={20} color="#fff" /> */}
               <MaterialDesignIcons name="account-minus-outline" size={20} color="#fff" />
               <Text style={styles.deleteAccountText}>Delete Account</Text>
             </TouchableOpacity>

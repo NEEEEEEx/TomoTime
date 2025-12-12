@@ -8,7 +8,7 @@ import {
   FlatList,
   TextInput,
   Alert,
-  Modal, // Added Modal to imports
+  Modal,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -21,7 +21,7 @@ import AddFreeTimeModal from '../components/modals/AddFreeTimeModal';
 import EditSemesterModal from '../components/modals/EditSemesterModal';
 import EditClassScheduleModal from '../components/modals/EditClassScheduleModal';
 import EditFreeTimeModal from '../components/modals/EditFreeTimeModal';
-import ScheduleImporter from '../components/ScheduleImporter'; // Added ScheduleImporter import
+import ScheduleImporter from '../components/ScheduleImporter';
 import { 
   saveSemesterPreferences, 
   saveClassSchedule, 
@@ -57,7 +57,6 @@ const steps = [
   'Step 2 \nWhat is your Class Schedule?', 
   'Step 3 \nWhen is your Vacant Time?'
 ];
-//==================================//
 
 //========= STEP INDICATOR STYLES ==========//
 const stepsIndicatorStyles = {
@@ -90,22 +89,20 @@ const stepsIndicatorStyles = {
   separatorStrokeWidth: 3,
   stepStrokeWidth: 3,
 };
-//==================================//
 
 export default function MultiStep({ navigation, route}) {
 
   const [profileMenuVisible, setProfileMenuVisible] = useState(false);
   const { signOut, user } = useContext(AuthContext);
   const [profilePicture, setProfilePicture] = useState(null);
-  const [semesters, setSemesters] = useState([]); //initialize as empty arrays
+  const [semesters, setSemesters] = useState([]); 
   const [classes, setClasses] = useState([]);
   const [freeTime, setFreeTime] = useState([]);
-  const [currentPosition, setCurrentPosition] = useState(0);// Step Indicator Posistion
-  const [addModalVisible, setAddModalVisible] = useState(false); // Add New Item Modal Visibility
-  const [editModalVisible, setEditModalVisible] = useState(false); // Edit Item Modal Visibility
-  const [itemToEdit, setItemToEdit] = useState(null); // currently editing item
-  const [importModalVisible, setImportModalVisible] = useState(false); // State for AI Importer Modal
-  // =================================== //
+  const [currentPosition, setCurrentPosition] = useState(0);
+  const [addModalVisible, setAddModalVisible] = useState(false); 
+  const [editModalVisible, setEditModalVisible] = useState(false); 
+  const [itemToEdit, setItemToEdit] = useState(null); 
+  const [importModalVisible, setImportModalVisible] = useState(false); 
   const [loading, setLoading] = useState(true);
   const [stepValidation, setStepValidation] = useState({
     step0Complete: false,
@@ -115,50 +112,55 @@ export default function MultiStep({ navigation, route}) {
   const { completeMultiStep } = useContext(AuthContext);
 
   //=========== Profile Menu ============//
-    const toggleProfileMenu = () => {
-      setProfileMenuVisible(!profileMenuVisible);
-    }
-  
-    const handleProfile = () => {
-      setProfileMenuVisible(false);
-      navigation.navigate('ProfilePage');
-    }
+  const toggleProfileMenu = () => {
+    setProfileMenuVisible(!profileMenuVisible);
+  }
 
-    const handleLogout = async () => {
-      setProfileMenuVisible(false);
-      Alert.alert(
-        'Log Out',
-        'Are you sure you want to log out?',
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel'
+  const handleProfile = () => {
+    setProfileMenuVisible(false);
+    navigation.navigate('ProfilePage');
+  }
+
+  const handleLogout = async () => {
+    setProfileMenuVisible(false);
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Log Out',
+          onPress: async () => {
+            await signOut();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Welcome' }],
+            });
           },
-          {
-            text: 'Log Out',
-            onPress: async () => {
-              await signOut();
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Welcome' }],
-              });
-            },
-            style: 'destructive'
-          }
-        ]
-      );
-    }
-    //===================================//
+          style: 'destructive'
+        }
+      ]
+    );
+  }
 
-  // Load profile picture
+  //=========== Load Profile Picture ============//
   const loadProfilePicture = async () => {
     try {
+      // 1. Try to get custom picture from storage
       const picture = await getUserData(PROFILE_PICTURE_KEY);
+      
       if (picture) {
         setProfilePicture(picture);
-      } else if (user?.user?.photo) {
-        setProfilePicture(user.user.photo);
-      } else {
+      } 
+      // 2. Fallback to Google Photo from AuthContext
+      // UPDATED: Changed user.user.photo to user.photo
+      else if (user?.photo) {
+        setProfilePicture(user.photo);
+      } 
+      else {
         setProfilePicture(null);
       }
     } catch (error) {
@@ -166,21 +168,19 @@ export default function MultiStep({ navigation, route}) {
     }
   };
 
-  // Reload profile picture when screen comes into focus
+  // Reload profile picture when screen comes into focus or user changes
   useFocusEffect(
     React.useCallback(() => {
       loadProfilePicture();
     }, [user])
   );
-  //===================================//
- 
 
   //====== ASYNC STORAGE FUNCS -======//
 
   const storeData = async (key, value) => {
     try {
       await setUserData(key, value);
-      console.log(`Data stored in key success: ${key}`); //checks if json value is stored in asyncStorage
+      console.log(`Data stored in key success: ${key}`); 
     } catch (error) {
       console.error(`Error saving data for: ${key}`, error);
     }
@@ -192,7 +192,7 @@ export default function MultiStep({ navigation, route}) {
       if (asyncValue != null) {
         return asyncValue;
       } else {
-        return fallbackData; //if there is nothing in storage use sample data
+        return fallbackData; 
       }
     } catch (error) {
       console.error(`Error reading data for: ${key}`, error);
@@ -298,7 +298,6 @@ export default function MultiStep({ navigation, route}) {
       }
     }
   }, [freeTime, loading]);
-  //===========End of async storage funcs==========//
 
 
   //=========== Load Data from AsyncStorage on Mount ===========//
@@ -337,19 +336,15 @@ export default function MultiStep({ navigation, route}) {
       saveFreeTime(freeTime);
     }
   }, [freeTime]);
-  //================================================//
 
   //=========== Use Effect for Route Params ===========//
-  //This is for Burger Menu Navigation to Specific Step
   useEffect(() => {
     const initial = route?.params?.initialStep;
     if (initial !== undefined && initial !== null) {
-      // ensure number and within range 0..2
       const stepIndex = Math.max(0, Math.min(2, Number(initial)));
       setCurrentPosition(stepIndex);
     }
   }, [route?.params?.initialStep]);
-  //================================================//
   
   //============ Steps Navigation ============//
   const goNext = async () => {
@@ -389,14 +384,13 @@ export default function MultiStep({ navigation, route}) {
         return;
       }
       
-      // All steps complete - mark MultiStep as done and navigate
+      // All steps complete
       console.log('All steps complete! Navigating to CalendarPage');
       await completeMultiStep();
       navigation.replace('CalendarPage');
       return;
     }
     
-    // Move to next step
     if (currentPosition < 2) {
       setCurrentPosition(currentPosition + 1);
     }
@@ -407,55 +401,39 @@ export default function MultiStep({ navigation, route}) {
       setCurrentPosition(currentPosition - 1);
     }
   };
-  //=========================================//
 
   // =========== Handlers for Selecting and Adding Items ============ //
-  // Helper to convert "14:00" to "2:00 PM"
   const formatTo12Hour = (time24) => {
     if (!time24) return "";
     const [hours, minutes] = time24.split(':');
     let h = parseInt(hours, 10);
     const ampm = h >= 12 ? 'PM' : 'AM';
     h = h % 12;
-    h = h ? h : 12; // the hour '0' should be '12'
+    h = h ? h : 12; 
     return `${h}:${minutes} ${ampm}`;
   };
-  // Handler for AI Importer Success
-  // Handler for AI Importer Success
+
   const handleAIImportSuccess = (parsedData) => {
-    // 1. Transform AI data format to App data format
-    // AI returns: { title: "Math", day: "Monday", start_time: "14:00", end_time: "15:30" }
-    
     const newClasses = parsedData.map((item, index) => ({
-      id: (Date.now() + index).toString(), // Generate unique ID
+      id: (Date.now() + index).toString(), 
       title: item.title,
       day: item.day,
-      // Convert the 24h time from AI to 12h format for the app
       startTime: formatTo12Hour(item.start_time), 
       endTime: formatTo12Hour(item.end_time),
     }));
 
-    // 2. Add to existing classes state
     setClasses(prev => [...newClasses, ...prev]);
-
-    // 3. Close Modal and Notify
     setImportModalVisible(false);
   };
-
 
   //============ Semester Handlers
   const handleSelectSemester = async (id) => { 
     setSemesters(prev => 
       prev.map(sem => ({ ...sem, selected: sem.id === id })) 
     );
-    
-    // Save selected semester
     await saveSelectedSemester(id);
-    
-    // Load classes and free time for this semester
     const semesterClasses = await getClassScheduleForSemester(id);
     const semesterFreeTime = await getFreeTimeForSemester(id);
-    
     setClasses(semesterClasses);
     setFreeTime(semesterFreeTime);
   };
@@ -478,7 +456,6 @@ export default function MultiStep({ navigation, route}) {
   };
 
   const handleDeleteSemester = (id) => {
-      // simple confirmation
       Alert.alert('Delete Semester', 'Are you sure you want to delete this semester?', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: () => setSemesters(prev => prev.filter(sem => sem.id !== id)) }
@@ -542,10 +519,8 @@ export default function MultiStep({ navigation, route}) {
     ]);
   };
 
-  // =========================================================== //
-
     
-  // 1. Render Semester Card (Selectable)
+  // 1. Render Semester Card
   const renderSemesterItem = ({ item }) => {
     const studyTime = String(item.study).includes('min') ? item.study : `${item.study} min.`;
     const breakTime = String(item.break).includes('min') ? item.break : `${item.break} min.`;
@@ -557,11 +532,10 @@ export default function MultiStep({ navigation, route}) {
             ['#fffefc', '#fffefc']}
           start={{ x: 0, y: 1 }}
           end={{ x: 1, y: 0 }}
-          style={[styles.cardWrapper, isSelected && styles.cardSelected]} // Ensure styles.cardSelected exists or remove
+          style={[styles.cardWrapper, isSelected && styles.cardSelected]} 
         >
           <View style={styles.cardHeaderRow}>
             <Text style={[styles.cardTitle, isSelected && { color: 'white' }]}>{item.title}</Text>
-            {/* Edit/Trash Icons */}
             <View style={styles.rightIcons}>
               <TouchableOpacity onPress={() => handleOpenEditSemester(item)}>
                 <FontAwesome5 
@@ -590,7 +564,7 @@ export default function MultiStep({ navigation, route}) {
     );
   };
 
-  // 2. Render Class Schedule Card (Display Only)
+  // 2. Render Class Schedule Card
   const renderClassItem = ({ item }) => (
     <View style={styles.cardWrapper}> 
       <View style={styles.cardHeaderRow}>
@@ -655,7 +629,6 @@ export default function MultiStep({ navigation, route}) {
     </View>
   );
 
-
   // ============== DYNAMIC CONTENT SELECTOR ============== //
   const getStepContent = () => {
     switch (currentPosition) {
@@ -684,7 +657,6 @@ export default function MultiStep({ navigation, route}) {
         return null;
     }
   };
-  //========================================================//
 
   const currentContent = getStepContent();
 
@@ -763,7 +735,6 @@ export default function MultiStep({ navigation, route}) {
             </TouchableOpacity>
           )}
 
-          {/* === ADDED: SCAN BUTTON FOR STEP 2 === */}
           {currentPosition === 1 && (
             <TouchableOpacity 
               style={[styles.addButton, { backgroundColor: '#4A90E2', marginRight: 10 }]} 
@@ -857,7 +828,7 @@ export default function MultiStep({ navigation, route}) {
       />}
       {/* -------- End of Edit Modal -------- */}
 
-      {/* === ADDED: AI SCHEDULE IMPORTER MODAL === */}
+      {/* === AI SCHEDULE IMPORTER MODAL === */}
       <Modal
         visible={importModalVisible}
         transparent={true}
